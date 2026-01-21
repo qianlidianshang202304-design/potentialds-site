@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Download, FileText, Layers, Wand2 } from 'lucide-react';
+import { Download, FileText, Layers, Wand2, ExternalLink, KeyRound } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'PDF智能排版助手 Pro - PotentialDS',
@@ -15,15 +15,48 @@ export default function PDFProPage() {
         <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-6">
           文档排版，<span className="text-orange-600">一键重生。</span>
         </h1>
-        <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">
+        <p className="text-xl text-gray-500 mb-8 max-w-2xl mx-auto">
           告别繁琐的手动调整。智能识别段落、自动优化布局，让你的 PDF 文档焕然一新。
         </p>
         
-        <a href="/pdf-pro-v1.0.zip" download className="group relative inline-flex items-center gap-3 bg-orange-600 text-white px-10 py-4 rounded-full text-lg font-medium hover:bg-orange-700 transition-all shadow-xl shadow-orange-200">
-            <Download size={20} />
-            <span>下载专业版 (.zip)</span>
-        </a>
-        <p className="text-xs text-gray-400 mt-3">支持 Windows 10/11</p>
+        {/* --- 百度网盘下载卡片 (新增部分) --- */}
+        <div className="bg-orange-50 border border-orange-100 p-6 md:p-8 rounded-3xl max-w-md mx-auto shadow-xl shadow-orange-100/50 text-left">
+            <div className="flex items-center gap-2 mb-4 justify-center">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <p className="text-xs text-orange-800 font-bold uppercase tracking-wider">官方高速下载通道</p>
+            </div>
+            
+            <div className="flex flex-col gap-4">
+                {/* 提取码展示区 */}
+                <div className="flex items-center justify-between bg-white px-5 py-4 rounded-xl border border-orange-200 shadow-sm">
+                    <div className="flex items-center gap-2 text-gray-500">
+                        <KeyRound size={18} />
+                        <span className="text-sm font-medium">提取码</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {/* select-all 属性让用户点击就能全选复制 */}
+                        <code className="bg-orange-100 text-orange-700 px-3 py-1 rounded-lg font-mono font-bold text-xl select-all cursor-text border border-orange-200">
+                            vv24
+                        </code>
+                    </div>
+                </div>
+
+                {/* 跳转按钮 */}
+                <a 
+                    href="https://pan.baidu.com/s/1m8THrswbWMjhv_0lK-VFng?pwd=vv24" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center justify-center gap-2 bg-orange-600 text-white w-full py-4 rounded-xl text-lg font-bold hover:bg-orange-700 transition-all shadow-md active:scale-[0.98]"
+                >
+                    <Download size={20} />
+                    <span>前往百度网盘</span>
+                    <ExternalLink size={16} className="opacity-70 group-hover:translate-x-1 transition-transform" />
+                </a>
+            </div>
+            <p className="text-[10px] text-orange-400 mt-4 text-center">
+                *文件较大，已托管至云端 | 仅支持 Windows 10/11
+            </p>
+        </div>
       </section>
 
        {/* 功能特点 */}

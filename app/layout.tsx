@@ -24,7 +24,7 @@ export default function RootLayout({
         <header className="fixed top-0 w-full z-[100] bg-[#fbfbfd]/80 backdrop-blur-md border-b border-gray-200 transition-all duration-300">
           <div className="max-w-[1024px] mx-auto px-4 h-11 flex items-center justify-between text-[12px] font-normal text-gray-700">
             
-            {/* 1. Logo / Home (模拟 Apple 图标位) */}
+            {/* 1. Logo / Home */}
             <Link href="/" className="hover:opacity-60 transition-opacity p-2">
               <span className="font-semibold text-black text-sm tracking-tight">PotentialDS</span>
             </Link>
@@ -40,15 +40,11 @@ export default function RootLayout({
               <Link href="/tt-insight" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
                 TT透视眼
               </Link>
-<<<<<<< HEAD
 
-              {/* 软件 3 (新增) */}
+              {/* 软件 3 (PDF助手) */}
               <Link href="/pdf-pro" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
-                PDF转doc排版助手
+                PDF排版助手
               </Link>
-
-=======
->>>>>>> b6eb0d7f3ce41fcd88fce7340587a1339aac478f
               
               {/* 其他链接 */}
               <a href="/#contact" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
@@ -59,9 +55,8 @@ export default function RootLayout({
               </a>
             </nav>
 
-            {/* 右侧搜索/功能区 (模拟 Apple 右侧图标) */}
+            {/* 右侧搜索/功能区 */}
             <div className="flex items-center gap-4">
-               {/* 这里可以放一个小搜索图标，或者只是占位 */}
                <Link href="/#contact" className="hover:opacity-60 transition-opacity">
                  <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full">Support</span>
                </Link>
@@ -70,7 +65,7 @@ export default function RootLayout({
           </div>
         </header>
 
-        {/* --- 页面主体 (加 padding-top 防止被导航栏挡住) --- */}
+        {/* --- 页面主体 --- */}
         <main className="pt-11 min-h-screen">
           {children}
         </main>
@@ -93,8 +88,8 @@ export default function RootLayout({
 
               {/* 右侧：二维码卡片 */}
               <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                 {/* 请确保 public 文件夹里有 wechat-qr.png */}
                  <div className="w-16 h-16 bg-gray-100 relative">
+                    {/* 确保你的 public 文件夹里有 wechat-qr.png */}
                     <Image 
                       src="/wechat-qr.png" 
                       alt="WeChat" 
@@ -104,11 +99,7 @@ export default function RootLayout({
                     />
                  </div>
                  <div>
-<<<<<<< HEAD
                    <p className="text-black font-medium">Huiyangtt1999</p>
-=======
-                   <p className="text-black font-medium">  </p>
->>>>>>> b6eb0d7f3ce41fcd88fce7340587a1339aac478f
                    <p className="text-[10px]">微信扫码咨询</p>
                  </div>
               </div>
