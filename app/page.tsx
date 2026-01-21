@@ -1,6 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
+<<<<<<< HEAD
 import { ArrowRight, Database, Eye, FileText } from 'lucide-react';
+=======
+import { ArrowRight, Database, Eye } from 'lucide-react';
+>>>>>>> b6eb0d7f3ce41fcd88fce7340587a1339aac478f
 
 export default function Home() {
   return (
@@ -54,6 +58,7 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[120px] opacity-60 pointer-events-none"></div>
       </section>
 
+<<<<<<< HEAD
       {/* --- 产品三：PDF排版助手 (全屏入口) --- */}
        <section className="sticky top-0 h-screen flex items-center justify-center bg-zinc-900 text-white overflow-hidden border-t border-gray-800">
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
@@ -78,6 +83,8 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-600/10 rounded-full blur-[120px] opacity-40 pointer-events-none"></div>
       </section>
 
+=======
+>>>>>>> b6eb0d7f3ce41fcd88fce7340587a1339aac478f
     </div>
   );
 }
