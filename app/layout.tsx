@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
+import { ChevronDown } from 'lucide-react'; // 👈 记得引入这个图标
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -30,32 +31,44 @@ export default function RootLayout({
             </Link>
 
             {/* 中间菜单区 (Desktop) */}
-            <nav className="hidden md:flex items-center justify-between w-full max-w-lg mx-auto">
-              {/* 软件 1 */}
-              <Link href="/leadtracking" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
-                Leadtracking
-              </Link>
+            <nav className="hidden md:flex items-center justify-center gap-6 w-full max-w-lg mx-auto h-full">
               
-              {/* 软件 2 */}
-              <Link href="/tt-insight" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
-                TT透视眼
-              </Link>
+              {/* --- ✨ 下拉菜单开始：产品系列 ✨ --- */}
+              <div className="relative group h-full flex items-center">
+                <button className="flex items-center gap-1 hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1 outline-none">
+                  产品系列
+                  <ChevronDown size={10} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                </button>
 
-              {/* 软件 3 (PDF助手) */}
-              <Link href="/pdf-pro" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
-                PDF排版助手
-              </Link>
-
-	{/* 👇 新增这一行 👇 */}
-	<Link href="/pdf-merge" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
- 	 PDF合并工具
-	</Link>              
-
-              {/* 其他链接 */}
-              <a href="/#contact" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
+                {/* 下拉面板 (悬停显示) */}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform group-hover:translate-y-0 translate-y-2">
+                    <div className="bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-xl shadow-xl p-1.5 w-40 flex flex-col gap-0.5 ring-1 ring-black/5">
+                         {/* 软件 1 */}
+                         <Link href="/leadtracking" className="block px-3 py-2 hover:bg-gray-100 rounded-lg text-gray-700 hover:text-black text-[12px] transition-colors">
+                            Leadtracking
+                         </Link>
+                         {/* 软件 2 */}
+                         <Link href="/tt-insight" className="block px-3 py-2 hover:bg-gray-100 rounded-lg text-gray-700 hover:text-black text-[12px] transition-colors">
+                            TT透视眼
+                         </Link>
+                         {/* 软件 3 */}
+                         <Link href="/pdf-pro" className="block px-3 py-2 hover:bg-gray-100 rounded-lg text-gray-700 hover:text-black text-[12px] transition-colors">
+                            PDF排版助手
+                         </Link>
+                         {/* 软件 4 */}
+                         <Link href="/pdf-merge" className="block px-3 py-2 hover:bg-gray-100 rounded-lg text-gray-700 hover:text-black text-[12px] transition-colors">
+                            PDF合并工具
+                         </Link>
+                    </div>
+                </div>
+              </div>
+              {/* --- 下拉菜单结束 --- */}
+              
+              {/* 其他固定链接 */}
+              <a href="/#contact" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
                 联系客服
               </a>
-              <a href="/#download" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
+              <a href="/#download" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
                 下载中心
               </a>
             </nav>
