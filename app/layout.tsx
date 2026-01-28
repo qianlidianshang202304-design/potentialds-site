@@ -45,7 +45,12 @@ export default function RootLayout({
               <Link href="/pdf-pro" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
                 PDF排版助手
               </Link>
-              
+
+	{/* 👇 新增这一行 👇 */}
+	<Link href="/pdf-merge" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
+ 	 PDF合并工具
+	</Link>              
+
               {/* 其他链接 */}
               <a href="/#contact" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-4 py-2">
                 联系客服

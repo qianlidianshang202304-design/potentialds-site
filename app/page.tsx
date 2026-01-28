@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 // ⚠️ 注意：这里我帮你加上了 FileText 图标的引入，否则第三个产品会报错
-import { ArrowRight, Database, Eye, FileText } from 'lucide-react';
+import { ArrowRight, Database, Eye, FileText, Merge } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -78,6 +78,31 @@ export default function Home() {
         </div>
         {/* 背景装饰 */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-600/10 rounded-full blur-[120px] opacity-40 pointer-events-none"></div>
+      </section>
+
+
+{/* --- 产品四：PDF合并工具 (新增) --- */}
+      <section className="sticky top-0 h-screen flex items-center justify-center bg-rose-950 text-white overflow-hidden border-t border-rose-900">
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <div className="mb-6">
+                <Merge size={48} className="mx-auto text-rose-500 mb-4" />
+                <h2 className="text-sm font-bold tracking-[0.2em] text-rose-500 uppercase">Product 04</h2>
+            </div>
+            <h1 className="text-6xl md:text-8xl font-bold mb-6 tracking-tighter">
+            PDF 合并工具.
+            </h1>
+            <p className="text-xl md:text-2xl text-rose-200/60 mb-10 max-w-2xl mx-auto leading-relaxed">
+            化繁为简。<br/>将散乱的文档汇聚成强大的力量。
+            </p>
+            <Link href="/pdf-merge">
+                <button className="group bg-rose-600 text-white px-10 py-4 rounded-full text-lg font-medium hover:bg-rose-700 transition-all flex items-center gap-2 mx-auto">
+                    免费下载
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+            </Link>
+        </div>
+        {/* 背景装饰 */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-rose-600/10 rounded-full blur-[120px] opacity-40 pointer-events-none"></div>
       </section>
 
     </div>
