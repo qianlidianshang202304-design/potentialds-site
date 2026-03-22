@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = ReturnType<typeof createClient<any>>;
 
 let cachedClient: SupabaseClient | null = null;
 
@@ -14,7 +14,7 @@ export function getSupabase() {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
 
-  cachedClient = createClient(supabaseUrl, supabaseAnonKey);
+  cachedClient = createClient<any>(supabaseUrl, supabaseAnonKey);
   return cachedClient;
 }
 

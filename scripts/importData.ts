@@ -126,7 +126,7 @@ async function main() {
   if (!supabaseUrl) throw new Error('Missing SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
   if (!supabaseServiceKey) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  const supabase = createClient<any>(supabaseUrl, supabaseServiceKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
 
@@ -213,7 +213,7 @@ async function main() {
     const candidates = ['id', 'nickname', 'username', 'link', 'platform'];
     let cleared = false;
     for (const column of candidates) {
-      const attempt = await supabase.from('influencers').delete({ returning: 'minimal' }).not(column, 'is', null);
+      const attempt = await supabase.from('influencers').delete().not(column, 'is', null);
       if (!attempt.error) {
         cleared = true;
         process.stdout.write('Cleared influencers table\n');
@@ -234,7 +234,7 @@ async function main() {
   const input = fs.createReadStream(csvPath);
   const effectiveEncoding = encoding === 'auto' ? detectEncoding(csvPath) : encoding;
   process.stdout.write(`Using encoding: ${effectiveEncoding}\n`);
-  const decoded = input.pipe(iconv.decodeStream(effectiveEncoding));
+  const decoded = input.pipe(iconv.decodeStream(effectiveEncoding)) as unknown as NodeJS.ReadWriteStream;
   const parser = csv({
     mapHeaders: ({ header }) => header?.trim(),
   });
@@ -272,9 +272,9 @@ async function main() {
       }
     }
   } finally {
-    if (!stream.destroyed) stream.destroy();
-    if (!decoded.destroyed) decoded.destroy();
-    if (!input.destroyed) input.destroy();
+    stream.destroy();
+    (decoded as unknown as { destroy?: () => void })?.destroy?.();
+    input.destroy();
   }
 
   await flush();

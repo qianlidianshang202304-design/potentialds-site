@@ -67,15 +67,15 @@ function computeQuota(profile: ProfileQuotaRow) {
   if (used >= limit) {
     return {
       canSearch: false,
-      reason: 'monthly_browse_limit' as const,
-      message: isPaid ? '本月可浏览达人额度已用完（20,000/月）。' : '本月可浏览达人额度已用完（2,000/月）。' as const,
+      reason: 'monthly_browse_limit' as SearchQuotaBlockReason,
+      message: isPaid ? '本月可浏览达人额度已用完（20,000/月）。' : '本月可浏览达人额度已用完（2,000/月）。',
       used,
       limit,
       remaining,
     };
   }
 
-  return { canSearch: true, reason: null as const, message: null as const, used, limit, remaining };
+  return { canSearch: true, reason: null, message: null, used, limit, remaining };
 }
 
 type StoreState = {
@@ -199,10 +199,11 @@ export function useSearchQuota(userId: string | null | undefined): UseSearchQuot
   }, [userId]);
 
   const quota = useMemo(() => {
-    if (!userId) return { canSearch: false, reason: null as const, message: null as const, used: null as const, limit: null as const, remaining: null as const };
-    if (state.loading) return { canSearch: false, reason: null as const, message: null as const, used: null as const, limit: null as const, remaining: null as const };
-    if (state.error) return { canSearch: false, reason: null as const, message: null as const, used: null as const, limit: null as const, remaining: null as const };
-    if (!state.profile) return { canSearch: false, reason: null as const, message: null as const, used: null as const, limit: null as const, remaining: null as const };
+    const empty = { canSearch: false, reason: null, message: null, used: null, limit: null, remaining: null };
+    if (!userId) return empty;
+    if (state.loading) return empty;
+    if (state.error) return empty;
+    if (!state.profile) return empty;
     return computeQuota(state.profile);
   }, [state.error, state.loading, state.profile, userId]);
 
