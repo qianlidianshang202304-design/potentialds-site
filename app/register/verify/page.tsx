@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { getSupabase } from '../../../lib/supabase';
+import { getSupabaseSafe } from '../../../lib/supabase';
 
 export default function RegisterVerifyPage() {
   return (
@@ -45,7 +45,12 @@ function RegisterVerifyInner() {
     setHint(null);
     setError(null);
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseSafe();
+      if (!supabase) {
+        setError('系统配置错误：Supabase 未配置，请联系管理员。');
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.resend({ type: 'signup', email });
       if (error) throw error;
       setHint('已重新发送验证邮件，请检查收件箱与垃圾邮件。');

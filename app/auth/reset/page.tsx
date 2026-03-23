@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabase } from '../../../lib/supabase';
+import { getSupabaseSafe } from '../../../lib/supabase';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -19,7 +19,13 @@ export default function ResetPasswordPage() {
     let cancelled = false;
     const run = async () => {
       try {
-        const supabase = getSupabase();
+        const supabase = getSupabaseSafe();
+        if (!supabase) {
+          setError('系统配置错误：Supabase 未配置，请联系管理员。');
+          setLoading(false);
+          return;
+        }
+
         const code = new URLSearchParams(window.location.search).get('code');
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -56,7 +62,12 @@ export default function ResetPasswordPage() {
     setError(null);
     setLoading(true);
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseSafe();
+      if (!supabase) {
+        setError('系统配置错误：Supabase 未配置，请联系管理员。');
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       setHint('密码已更新，可以使用新密码登录。');
@@ -129,4 +140,3 @@ export default function ResetPasswordPage() {
     </main>
   );
 }
-

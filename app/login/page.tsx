@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getSupabase, ensureProfile, updateOwnProfile } from '../../lib/supabase';
+import { getSupabaseSafe, ensureProfile, updateOwnProfile } from '../../lib/supabase';
 
 function formatErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -34,7 +34,12 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseSafe();
+      if (!supabase) {
+        setError('系统配置错误：Supabase 未配置，请联系管理员。');
+        setLoading(false);
+        return;
+      }
       const raw = identifier.trim();
       let email = raw;
 

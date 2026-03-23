@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getSupabase } from '../../lib/supabase';
+import { getSupabaseSafe } from '../../lib/supabase';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -19,7 +19,12 @@ export default function RegisterPage() {
     setLoading(true);
     setError(null);
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseSafe();
+      if (!supabase) {
+        setError('系统配置错误：Supabase 未配置，请联系管理员。');
+        setLoading(false);
+        return;
+      }
       const emailRedirectTo = `${window.location.origin}/auth/callback`;
       const { error } = await supabase.auth.signUp({
         email,

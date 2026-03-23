@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { getSupabase } from '../../lib/supabase';
+import { getSupabaseSafe } from '../../lib/supabase';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -18,7 +18,12 @@ export default function ForgotPasswordPage() {
     setHint(null);
     setError(null);
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseSafe();
+      if (!supabase) {
+        setError('系统配置错误：Supabase 未配置，请联系管理员。');
+        setLoading(false);
+        return;
+      }
       const redirectTo = `${window.location.origin}/auth/reset`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       if (error) throw error;
@@ -75,4 +80,3 @@ export default function ForgotPasswordPage() {
     </main>
   );
 }
-

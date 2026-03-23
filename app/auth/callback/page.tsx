@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ensureProfile, getSupabase, updateOwnProfile } from '../../../lib/supabase';
+import { ensureProfile, getSupabaseSafe, updateOwnProfile } from '../../../lib/supabase';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -13,10 +13,15 @@ export default function AuthCallbackPage() {
 
     const run = async () => {
       try {
+        const supabase = getSupabaseSafe();
+        if (!supabase) {
+          setError('系统配置错误：Supabase 未配置，请联系管理员。');
+          return;
+        }
+
         const code = new URLSearchParams(window.location.search).get('code');
         if (!code) throw new Error('Missing code');
 
-        const supabase = getSupabase();
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) throw error;
         if (!data.user) throw new Error('Missing user');
@@ -52,4 +57,3 @@ export default function AuthCallbackPage() {
     </main>
   );
 }
-
