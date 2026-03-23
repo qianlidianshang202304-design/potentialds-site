@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Download, Merge, Layers, FileStack } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export default function PDFMergePage() {
       {/* 独立导航栏 */}
        <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-black/5">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-           <a href="/" className="font-bold tracking-tight text-lg">PotentialDS</a>
+           <Link href="/" className="font-bold tracking-tight text-lg">PotentialDS</Link>
            <span className="text-sm font-bold text-rose-600">PDF合并工具</span>
         </div>
       </nav>

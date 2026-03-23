@@ -126,9 +126,16 @@ async function main() {
   if (!supabaseUrl) throw new Error('Missing SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
   if (!supabaseServiceKey) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
 
-  const supabase = createClient<any>(supabaseUrl, supabaseServiceKey, {
+  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
+
+  const influencers = supabase.from('influencers') as unknown as {
+    insert: (values: Record<string, unknown>[]) => Promise<{ error: unknown }>;
+    delete: () => {
+      not: (column: string, operator: string, value: null) => Promise<{ error: unknown }>;
+    };
+  };
 
   const batchSize = 500;
   const buffer: InfluencerInsert[] = [];
@@ -155,7 +162,7 @@ async function main() {
     while (attempts < 10) {
       attempts += 1;
       const payload = buildInsertPayload();
-      const { error } = await supabase.from('influencers').insert(payload);
+    const { error } = await influencers.insert(payload);
       if (!error) break;
 
       const message = (error as { message?: string }).message ?? JSON.stringify(error);
@@ -213,7 +220,7 @@ async function main() {
     const candidates = ['id', 'nickname', 'username', 'link', 'platform'];
     let cleared = false;
     for (const column of candidates) {
-      const attempt = await supabase.from('influencers').delete().not(column, 'is', null);
+      const attempt = await influencers.delete().not(column, 'is', null);
       if (!attempt.error) {
         cleared = true;
         process.stdout.write('Cleared influencers table\n');

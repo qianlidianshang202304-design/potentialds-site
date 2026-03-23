@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-type SupabaseClient = ReturnType<typeof createClient<any>>;
+type SupabaseClient = ReturnType<typeof createClient>;
 
 let cachedClient: SupabaseClient | null = null;
 
@@ -14,12 +14,15 @@ export function getSupabase() {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
 
-  cachedClient = createClient<any>(supabaseUrl, supabaseAnonKey);
+  cachedClient = createClient(supabaseUrl, supabaseAnonKey);
   return cachedClient;
 }
 
 export async function ensureProfile(userId: string) {
   const supabase = getSupabase();
+  const profiles = supabase.from('profiles') as unknown as {
+    insert: (values: Record<string, unknown>) => Promise<{ error: unknown }>;
+  };
   const basePayload: Record<string, unknown> = {
     id: userId,
     is_paid: false,
@@ -30,9 +33,9 @@ export async function ensureProfile(userId: string) {
     browse_month: currentMonthKey(),
   };
 
-  let payload = { ...basePayload };
+  let payload: Record<string, unknown> = { ...basePayload };
   for (let attempt = 0; attempt < 6; attempt += 1) {
-    const { error } = await supabase.from('profiles').insert(payload);
+    const { error } = await profiles.insert(payload);
     if (!error) return;
 
     if ((error as { code?: string }).code === '23505') return;
@@ -42,8 +45,7 @@ export async function ensureProfile(userId: string) {
     if (match) {
       const missingColumn = match[1];
       if (missingColumn in payload) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete payload[missingColumn];
+        payload = Object.fromEntries(Object.entries(payload).filter(([key]) => key !== missingColumn));
         continue;
       }
     }
@@ -56,13 +58,18 @@ export async function ensureProfile(userId: string) {
 
 export async function updateOwnProfile(params: { userId: string; email?: string | null; username?: string | null }) {
   const supabase = getSupabase();
+  const profiles = supabase.from('profiles') as unknown as {
+    update: (values: Record<string, unknown>) => {
+      eq: (column: string, value: string) => Promise<{ error: unknown }>;
+    };
+  };
   let payload: Record<string, unknown> = {};
   if (params.email !== undefined) payload.email = params.email;
   if (params.username !== undefined) payload.username = params.username;
   if (Object.keys(payload).length === 0) return;
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const { error } = await supabase.from('profiles').update(payload).eq('id', params.userId);
+    const { error } = await profiles.update(payload).eq('id', params.userId);
     if (!error) return;
 
     const message = (error as { message?: string }).message ?? '';
@@ -70,8 +77,7 @@ export async function updateOwnProfile(params: { userId: string; email?: string 
     if (match) {
       const missingColumn = match[1];
       if (missingColumn in payload) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete payload[missingColumn];
+        payload = Object.fromEntries(Object.entries(payload).filter(([key]) => key !== missingColumn));
         if (Object.keys(payload).length === 0) return;
         continue;
       }
@@ -92,6 +98,16 @@ export async function incrementProfileBrowseCount(userId: string, delta: number)
   if (!Number.isFinite(delta) || delta <= 0) return;
 
   const supabase = getSupabase();
+  const profiles = supabase.from('profiles') as unknown as {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error: unknown }>;
+      };
+    };
+    update: (values: Record<string, unknown>) => {
+      eq: (column: string, value: string) => Promise<{ error: unknown }>;
+    };
+  };
 
   let data:
     | {
@@ -102,13 +118,13 @@ export async function incrementProfileBrowseCount(userId: string, delta: number)
       }
     | null = null;
 
-  const first = await supabase.from('profiles').select('browse_used,browse_month,browse_limit').eq('id', userId).maybeSingle();
+  const first = await profiles.select('browse_used,browse_month,browse_limit').eq('id', userId).maybeSingle();
 
   if (first.error) {
     const message = (first.error as { message?: string }).message ?? '';
     const match = message.match(/Could not find the '([^']+)' column/);
     if (match && ['browse_used', 'browse_month', 'browse_limit'].includes(match[1])) {
-      const fallback = await supabase.from('profiles').select('search_count').eq('id', userId).maybeSingle();
+      const fallback = await profiles.select('search_count').eq('id', userId).maybeSingle();
       if (fallback.error) throw fallback.error;
       data = fallback.data as typeof data;
     } else {
@@ -120,10 +136,14 @@ export async function incrementProfileBrowseCount(userId: string, delta: number)
 
   const monthKey = currentMonthKey();
   const supportsBrowseMonth = Boolean(data && 'browse_month' in (data as object));
-  const currentMonth = supportsBrowseMonth ? (data as any)?.browse_month : null;
+  const currentMonth = supportsBrowseMonth
+    ? ((data ?? {}) as { browse_month?: string | null }).browse_month ?? null
+    : null;
   const monthMismatch = Boolean(currentMonth && currentMonth !== monthKey);
 
-  const currentUsed = supportsBrowseMonth ? ((data as any)?.browse_used ?? 0) : ((data as any)?.search_count ?? 0);
+  const currentUsed = supportsBrowseMonth
+    ? ((data ?? {}) as { browse_used?: number | null }).browse_used ?? 0
+    : ((data ?? {}) as { search_count?: number | null }).search_count ?? 0;
   const nextUsed = monthMismatch ? delta : currentUsed + delta;
 
   let payload: Record<string, unknown> = { browse_used: nextUsed, browse_month: monthKey };
@@ -132,16 +152,15 @@ export async function incrementProfileBrowseCount(userId: string, delta: number)
   }
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const update = await supabase.from('profiles').update(payload).eq('id', userId);
+    const update = await profiles.update(payload).eq('id', userId);
     if (!update.error) return;
 
-    const message = (update.error as { message?: string }).message ?? '';
+    const message = ((update.error as { message?: string })?.message ?? '') as string;
     const match = message.match(/Could not find the '([^']+)' column/);
     if (match) {
       const missingColumn = match[1];
       if (missingColumn in payload) {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete payload[missingColumn];
+        payload = Object.fromEntries(Object.entries(payload).filter(([key]) => key !== missingColumn));
         continue;
       }
     }

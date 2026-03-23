@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import { Chrome, Search, Youtube } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import QuotaModal from '../../components/QuotaModal';
@@ -82,6 +82,14 @@ function formatCompactZh(value: number | null | undefined) {
 }
 
 export default function CreatorWorkbenchPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-transparent text-slate-900" />}>
+      <CreatorWorkbenchInner />
+    </Suspense>
+  );
+}
+
+function CreatorWorkbenchInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activePlatform, setActivePlatform] = useState<Platform>('All');
@@ -209,7 +217,16 @@ export default function CreatorWorkbenchPage() {
         setLoading(false);
       }
     },
-    [activePlatform, followerRange, page, query, quota.canSearch, quota.loading, quota.reason, region, router, user?.id],
+    [
+      activePlatform,
+      followerRange,
+      page,
+      query,
+      quota,
+      region,
+      router,
+      user?.id,
+    ],
   );
 
   useEffect(() => {

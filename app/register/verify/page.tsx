@@ -1,11 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabase } from '../../../lib/supabase';
 
 export default function RegisterVerifyPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-transparent text-slate-900" />}>
+      <RegisterVerifyInner />
+    </Suspense>
+  );
+}
+
+function RegisterVerifyInner() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') ?? '';
   const [loading, setLoading] = useState(false);
