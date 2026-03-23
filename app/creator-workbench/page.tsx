@@ -181,11 +181,12 @@ export default function CreatorWorkbenchPage() {
 
           const { data, error, count } = await qy;
           if (!error) {
-            setResults((data ?? []) as InfluencerRow[]);
+            const rows = (data ?? []) as unknown as InfluencerRow[];
+            setResults(rows);
             setLastFetchedAt(Date.now());
             setTotalCount(typeof count === 'number' ? count : null);
             try {
-              if (shouldCount) await incrementProfileBrowseCount(user.id, (data ?? []).length);
+              if (shouldCount) await incrementProfileBrowseCount(user.id, rows.length);
             } catch {}
             quota.refresh();
             setLoading(false);

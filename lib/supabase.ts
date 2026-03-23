@@ -120,10 +120,10 @@ export async function incrementProfileBrowseCount(userId: string, delta: number)
 
   const monthKey = currentMonthKey();
   const supportsBrowseMonth = Boolean(data && 'browse_month' in (data as object));
-  const currentMonth = supportsBrowseMonth ? data?.browse_month : null;
+  const currentMonth = supportsBrowseMonth ? (data as any)?.browse_month : null;
   const monthMismatch = Boolean(currentMonth && currentMonth !== monthKey);
 
-  const currentUsed = supportsBrowseMonth ? (data?.browse_used ?? 0) : (data?.search_count ?? 0);
+  const currentUsed = supportsBrowseMonth ? ((data as any)?.browse_used ?? 0) : ((data as any)?.search_count ?? 0);
   const nextUsed = monthMismatch ? delta : currentUsed + delta;
 
   let payload: Record<string, unknown> = { browse_used: nextUsed, browse_month: monthKey };
