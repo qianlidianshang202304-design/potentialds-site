@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { getSupabase } from '../lib/supabase';
+import { getSupabaseSafe } from '../lib/supabase';
 import { useSearchQuota } from '../hooks/useSearchQuota';
 import { useSupabaseUser } from '../hooks/useSupabaseUser';
 
@@ -50,7 +50,12 @@ export default function HeaderUserStatus() {
       </div>
       <button
         type="button"
-        onClick={() => getSupabase().auth.signOut()}
+        onClick={() => {
+          const supabase = getSupabaseSafe();
+          if (supabase) {
+            supabase.auth.signOut();
+          }
+        }}
         className="inline-flex items-center rounded-full border border-zinc-200 bg-white/80 px-3 py-1 text-[12px] font-medium text-zinc-700 transition hover:border-slate-900 hover:text-slate-900"
       >
         退出

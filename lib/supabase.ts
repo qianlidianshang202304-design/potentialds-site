@@ -4,18 +4,24 @@ type SupabaseClient = ReturnType<typeof createClient>;
 
 let cachedClient: SupabaseClient | null = null;
 
-export function getSupabase() {
+export function getSupabaseSafe() {
   if (cachedClient) return cachedClient;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
-  }
+  if (!supabaseUrl || !supabaseAnonKey) return null;
 
   cachedClient = createClient(supabaseUrl, supabaseAnonKey);
   return cachedClient;
+}
+
+export function getSupabase() {
+  const client = getSupabaseSafe();
+  if (!client) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  }
+  return client;
 }
 
 export async function ensureProfile(userId: string) {

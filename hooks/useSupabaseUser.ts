@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { getSupabase } from '../lib/supabase';
+import { getSupabaseSafe } from '../lib/supabase';
 
 export function useSupabaseUser() {
   const [user, setUser] = useState<User | null>(null);
@@ -11,7 +11,16 @@ export function useSupabaseUser() {
 
   useEffect(() => {
     let mounted = true;
-    const supabase = getSupabase();
+    const supabase = getSupabaseSafe();
+
+    if (!supabase) {
+      setSession(null);
+      setUser(null);
+      setLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
 
     supabase.auth
       .getSession()
@@ -49,4 +58,3 @@ export function useSupabaseUser() {
 
   return { user, session, loading };
 }
-

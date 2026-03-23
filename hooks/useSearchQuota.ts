@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
-import { getSupabase } from '../lib/supabase';
+import { getSupabaseSafe } from '../lib/supabase';
 
 export type SearchQuotaBlockReason = 'monthly_browse_limit';
 
@@ -118,7 +118,11 @@ async function fetchProfile(userId: string) {
 
   entry.inFlight = (async () => {
     setEntryState(userId, { loading: true, error: null });
-    const supabase = getSupabase();
+    const supabase = getSupabaseSafe();
+    if (!supabase) {
+      setEntryState(userId, { loading: false, profile: null, error: new Error('Supabase is not configured'), updatedAt: Date.now() });
+      return;
+    }
 
     const primary = await supabase
       .from('profiles')
