@@ -7,9 +7,11 @@ type Props = {
   title?: string;
   message: string;
   onClose: () => void;
+  onConfirm?: () => void;
+  confirmText?: string;
 };
 
-export default function QuotaModal({ open, title = '提示', message, onClose }: Props) {
+export default function QuotaModal({ open, title = '提示', message, onClose, onConfirm, confirmText = '确定' }: Props) {
   if (!open) return null;
 
   return (
@@ -31,13 +33,29 @@ export default function QuotaModal({ open, title = '提示', message, onClose }:
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50"
           >
-            确定
+            取消
           </button>
+          {onConfirm ? (
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+            >
+              {confirmText}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+            >
+              确定
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

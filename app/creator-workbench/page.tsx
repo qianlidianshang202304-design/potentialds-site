@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useCallback, useEffect, useState } from 'react';
-import { Chrome, Search, Youtube } from 'lucide-react';
+import { Chrome, Download, Search, Youtube } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import QuotaModal from '../../components/QuotaModal';
 import { getSupabase, incrementProfileBrowseCount } from '../../lib/supabase';
@@ -9,10 +9,31 @@ import { useSearchQuota } from '../../hooks/useSearchQuota';
 import { useSupabaseUser } from '../../hooks/useSupabaseUser';
 
 type Platform = 'All' | 'Instagram' | 'YouTube' | 'TikTok';
-type FollowerRange = 'any' | '0-10k' | '10k-100k' | '100k-1m' | '1m+';
-type Region = 'any' | 'us';
+type FollowerRange = 'any' | '0-1k' | '1k-5k' | '5k-10k' | '10k-50k' | '50k-100k' | '100k-500k' | '500k-1m' | '1m+' | 'custom';
+type Region = 'any' | 'us' | 'ca' | 'jp' | 'kr' | 'uk' | 'de' | 'fr' | 'au' | 'sg';
+type SearchMode = 'name' | 'tag';
 
 const platforms: Platform[] = ['All', 'Instagram', 'YouTube', 'TikTok'];
+
+const followerOptions: { value: FollowerRange; label: string }[] = [
+  { value: 'any', label: '不限' },
+  { value: '0-1k', label: '0 - 1,000' },
+  { value: '1k-5k', label: '1,000 - 5,000' },
+  { value: '5k-10k', label: '5,000 - 1万' },
+  { value: '10k-50k', label: '1万 - 5万' },
+  { value: '50k-100k', label: '5万 - 10万' },
+  { value: '100k-500k', label: '10万 - 50万' },
+  { value: '500k-1m', label: '50万 - 100万' },
+  { value: '1m+', label: '100万以上' },
+  { value: 'custom', label: '自定义' },
+];
+
+const regionGroups: { group: string; options: { value: Region; label: string }[] }[] = [
+  { group: '不限', options: [{ value: 'any', label: '全部地区' }] },
+  { group: '北美', options: [{ value: 'us', label: '美国' }, { value: 'ca', label: '加拿大' }] },
+  { group: '亚太', options: [{ value: 'jp', label: '日本' }, { value: 'kr', label: '韩国' }, { value: 'sg', label: '新加坡' }, { value: 'au', label: '澳大利亚' }] },
+  { group: '欧洲', options: [{ value: 'uk', label: '英国' }, { value: 'de', label: '德国' }, { value: 'fr', label: '法国' }] },
+];
 
 type InfluencerRow = {
   nickname?: string | null;
@@ -62,11 +83,16 @@ function platformToValue(platform: Platform) {
   return 'tiktok';
 }
 
-function followerRangeToBounds(range: FollowerRange) {
-  if (range === '0-10k') return { min: 0, max: 10_000 };
-  if (range === '10k-100k') return { min: 10_000, max: 100_000 };
-  if (range === '100k-1m') return { min: 100_000, max: 1_000_000 };
+function followerRangeToBounds(range: FollowerRange, customMin?: number | null, customMax?: number | null) {
+  if (range === '0-1k') return { min: 0, max: 1_000 };
+  if (range === '1k-5k') return { min: 1_000, max: 5_000 };
+  if (range === '5k-10k') return { min: 5_000, max: 10_000 };
+  if (range === '10k-50k') return { min: 10_000, max: 50_000 };
+  if (range === '50k-100k') return { min: 50_000, max: 100_000 };
+  if (range === '100k-500k') return { min: 100_000, max: 500_000 };
+  if (range === '500k-1m') return { min: 500_000, max: 1_000_000 };
   if (range === '1m+') return { min: 1_000_000, max: null as number | null };
+  if (range === 'custom') return { min: customMin ?? null, max: customMax ?? null };
   return { min: null as number | null, max: null as number | null };
 }
 
@@ -79,6 +105,11 @@ function formatCompactZh(value: number | null | undefined) {
     return `${fixed.replace(/\.0+$/, '')}万`;
   }
   return new Intl.NumberFormat('zh-CN').format(value);
+}
+
+function getTodayKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 export default function CreatorWorkbenchPage() {
@@ -94,8 +125,12 @@ function CreatorWorkbenchInner() {
   const searchParams = useSearchParams();
   const [activePlatform, setActivePlatform] = useState<Platform>('All');
   const [followerRange, setFollowerRange] = useState<FollowerRange>('any');
+  const [customFollowerMin, setCustomFollowerMin] = useState<number | null>(null);
+  const [customFollowerMax, setCustomFollowerMax] = useState<number | null>(null);
   const [region, setRegion] = useState<Region>('any');
+  const [searchMode, setSearchMode] = useState<SearchMode>('name');
   const [quotaModalOpen, setQuotaModalOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,6 +141,8 @@ function CreatorWorkbenchInner() {
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [initializedFromUrl, setInitializedFromUrl] = useState(false);
   const [quotaMessage, setQuotaMessage] = useState('本月浏览额度已用完，请付费升级。');
+  const [exporting, setExporting] = useState(false);
+  const [exportCount, setExportCount] = useState<{ today: number; month: number }>({ today: 0, month: 0 });
 
   const { user } = useSupabaseUser();
   const quota = useSearchQuota(user?.id);
@@ -115,19 +152,26 @@ function CreatorWorkbenchInner() {
     const p = (searchParams.get('platform') ?? '').toLowerCase();
     const f = (searchParams.get('followers') ?? '').toLowerCase();
     const r = (searchParams.get('region') ?? '').toLowerCase();
+    const sm = (searchParams.get('searchMode') ?? '').toLowerCase();
     const q = searchParams.get('q') ?? '';
+    const fMin = searchParams.get('followerMin');
+    const fMax = searchParams.get('followerMax');
 
     if (p === 'instagram') setActivePlatform('Instagram');
     else if (p === 'youtube') setActivePlatform('YouTube');
     else if (p === 'tiktok') setActivePlatform('TikTok');
     else if (p === 'all') setActivePlatform('All');
 
-    if (f === '0-10k' || f === '10k-100k' || f === '100k-1m' || f === '1m+' || f === 'any') {
-      setFollowerRange(f as FollowerRange);
-    }
+    const validRanges: FollowerRange[] = ['any', '0-1k', '1k-5k', '5k-10k', '10k-50k', '50k-100k', '100k-500k', '500k-1m', '1m+', 'custom'];
+    if (validRanges.includes(f as FollowerRange)) setFollowerRange(f as FollowerRange);
+    if (fMin) setCustomFollowerMin(parseInt(fMin, 10));
+    if (fMax) setCustomFollowerMax(parseInt(fMax, 10));
 
-    if (r === 'us') setRegion('us');
-    else if (r === 'any') setRegion('any');
+    const validRegions: Region[] = ['any', 'us', 'ca', 'jp', 'kr', 'uk', 'de', 'fr', 'au', 'sg'];
+    if (validRegions.includes(r as Region)) setRegion(r as Region);
+
+    if (sm === 'tag') setSearchMode('tag');
+    else setSearchMode('name');
 
     if (q) setQuery(q);
 
@@ -136,12 +180,25 @@ function CreatorWorkbenchInner() {
     setInitializedFromUrl(true);
   }, [initializedFromUrl, searchParams]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    const loadExportCount = async () => {
+      const supabase = getSupabase();
+      const { data } = await supabase.from('profiles').select('export_today, export_month, export_date').eq('id', user.id).maybeSingle();
+      if (data) {
+        const todayKey = getTodayKey();
+        const row = data as { export_date?: string | null; export_today?: number | null; export_month?: number | null };
+        const today = row.export_date === todayKey ? (row.export_today ?? 0) : 0;
+        const month = row.export_month ?? 0;
+        setExportCount({ today, month });
+      }
+    };
+    loadExportCount();
+  }, [user?.id]);
+
   const runSearch = useCallback(
     async (shouldCount: boolean = true, targetPage?: number) => {
-      if (!user?.id) {
-        router.push('/login');
-        return;
-      }
+      if (!user?.id) { router.push('/login'); return; }
       if (!quota.loading && quota.canSearch === false && quota.reason) {
         setQuotaMessage(quota.message ?? '本月浏览额度已用完，请付费升级。');
         setQuotaModalOpen(true);
@@ -164,7 +221,7 @@ function CreatorWorkbenchInner() {
       const pageFrom = (effectivePage - 1) * pageSize;
       const pageTo = pageFrom + pageSize - 1;
 
-      const bounds = followerRangeToBounds(followerRange);
+      const bounds = followerRangeToBounds(followerRange, customFollowerMin, customFollowerMax);
       const platformValue = platformToValue(activePlatform);
       const keyword = query.trim();
 
@@ -182,9 +239,14 @@ function CreatorWorkbenchInner() {
             qy = qy.order('fans_num', { ascending: false, nullsFirst: false });
           }
 
-          if (keyword && !missingColumns.has('nickname') && !missingColumns.has('username')) {
-            const safe = keyword.replace(/,/g, ' ');
-            qy = qy.or(`nickname.ilike.%${safe}%,username.ilike.%${safe}%`);
+          if (keyword) {
+            if (searchMode === 'name' && !missingColumns.has('nickname') && !missingColumns.has('username')) {
+              const safe = keyword.replace(/,/g, ' ');
+              qy = qy.or(`nickname.ilike.%${safe}%,username.ilike.%${safe}%`);
+            } else if (searchMode === 'tag' && !missingColumns.has('tags')) {
+              const safe = keyword.replace(/,/g, ' ');
+              qy = qy.ilike('tags', `%${safe}%`);
+            }
           }
 
           const { data, error, count } = await qy;
@@ -193,9 +255,7 @@ function CreatorWorkbenchInner() {
             setResults(rows);
             setLastFetchedAt(Date.now());
             setTotalCount(typeof count === 'number' ? count : null);
-            try {
-              if (shouldCount) await incrementProfileBrowseCount(user.id, rows.length);
-            } catch {}
+            try { if (shouldCount) await incrementProfileBrowseCount(user.id, rows.length); } catch {}
             quota.refresh();
             setLoading(false);
             return;
@@ -203,30 +263,16 @@ function CreatorWorkbenchInner() {
 
           const message = (error as { message?: string }).message ?? '';
           const match = message.match(/Could not find the '([^']+)' column/);
-          if (match) {
-            missingColumns.add(match[1]);
-            continue;
-          }
-
+          if (match) { missingColumns.add(match[1]); continue; }
           throw error;
         }
-
         throw new Error('搜索失败：字段与数据库结构不匹配（已多次重试）');
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
         setLoading(false);
       }
     },
-    [
-      activePlatform,
-      followerRange,
-      page,
-      query,
-      quota,
-      region,
-      router,
-      user?.id,
-    ],
+    [activePlatform, followerRange, customFollowerMin, customFollowerMax, page, query, searchMode, quota, region, router, user?.id],
   );
 
   useEffect(() => {
@@ -239,28 +285,106 @@ function CreatorWorkbenchInner() {
   }, [hasAutoLoaded, quota.canSearch, quota.loading, quota.reason, runSearch, user?.id]);
 
   const runSearchClick = () => {
-    if (!user?.id) {
-      router.push('/login');
-      return;
-    }
-    if (!quota.loading && quota.canSearch === false && quota.reason) {
-      setQuotaModalOpen(true);
-      return;
-    }
+    if (!user?.id) { router.push('/login'); return; }
+    if (!quota.loading && quota.canSearch === false && quota.reason) { setQuotaModalOpen(true); return; }
     setPage(1);
     runSearch(true, 1);
   };
 
-  const platformAccent = (platform: Platform) => {
-    if (platform === 'Instagram') return 'text-[#E1306C]';
-    if (platform === 'YouTube') return 'text-[#FF0000]';
-    return 'text-slate-900';
+  const handleExport = async () => {
+    if (!user?.id) return;
+    const isPaid = quota.profile?.is_paid ?? false;
+    const maxDailyExports = isPaid ? 10 : 1;
+    const maxMonthlyExports = isPaid ? 300 : 1;
+
+    if (exportCount.today >= maxDailyExports) {
+      setQuotaMessage(isPaid ? '今日导出次数已达上限（10次/天）' : '今日导出次数已达上限（1次/天）');
+      setQuotaModalOpen(true);
+      return;
+    }
+    if (exportCount.month >= maxMonthlyExports) {
+      setQuotaMessage(isPaid ? '本月导出次数已达上限（300次/月）' : '导出次数已达上限');
+      setQuotaModalOpen(true);
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const supabase = getSupabase();
+      const bounds = followerRangeToBounds(followerRange, customFollowerMin, customFollowerMax);
+      const platformValue = platformToValue(activePlatform);
+      const keyword = query.trim();
+      const exportLimit = 1000;
+
+      const baseColumns = ['nickname', 'username', 'fans_num', 'view_avg', 'region_zh', 'tags', 'link', 'platform', 'region'];
+      let qy = supabase.from('influencers').select(baseColumns.join(',')).limit(exportLimit);
+
+      if (platformValue) qy = qy.eq('platform', platformValue);
+      if (region !== 'any') qy = qy.eq('region', region);
+      if (bounds.min !== null) qy = qy.gte('fans_num', bounds.min);
+      if (bounds.max !== null) qy = qy.lte('fans_num', bounds.max);
+      qy = qy.order('fans_num', { ascending: false, nullsFirst: false });
+
+      if (keyword) {
+        if (searchMode === 'name') {
+          const safe = keyword.replace(/,/g, ' ');
+          qy = qy.or(`nickname.ilike.%${safe}%,username.ilike.%${safe}%`);
+        } else {
+          const safe = keyword.replace(/,/g, ' ');
+          qy = qy.ilike('tags', `%${safe}%`);
+        }
+      }
+
+      const { data, error } = await qy;
+      if (error) throw error;
+
+      const rows = (data ?? []) as unknown as InfluencerRow[];
+      const headers = ['昵称', '用户名', '粉丝数', '平均播放', '地区', '标签', '链接', '平台'];
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => [
+          `"${(row.nickname ?? '').replace(/"/g, '""')}"`,
+          `"${(row.username ?? '').replace(/"/g, '""')}"`,
+          row.fans_num ?? '',
+          row.view_avg ?? '',
+          `"${(row.region_zh ?? '').replace(/"/g, '""')}"`,
+          `"${(row.tags ?? '').replace(/"/g, '""')}"`,
+          `"${(row.link ?? '').replace(/"/g, '""')}"`,
+          `"${(row.platform ?? '').replace(/"/g, '""')}"`,
+        ].join(','))
+      ].join('\n');
+
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `influencers_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      const todayKey = getTodayKey();
+      const newToday = exportCount.today + 1;
+      const newMonth = exportCount.month + 1;
+
+      const profiles = supabase.from('profiles') as unknown as {
+        update: (values: Record<string, unknown>) => { eq: (column: string, value: string) => Promise<{ error: unknown }> };
+      };
+      await profiles.update({ export_today: newToday, export_month: newMonth, export_date: todayKey }).eq('id', user.id);
+
+      setExportCount({ today: newToday, month: newMonth });
+      setExportModalOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExporting(false);
+    }
   };
 
   const platformActiveStyle = (platform: Platform) => {
-    if (platform === 'Instagram') return 'bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] text-white shadow-sm';
-    if (platform === 'YouTube') return 'bg-[#FF0000] text-white shadow-sm';
-    return 'bg-slate-900 text-white shadow-sm';
+    if (platform === 'Instagram') return 'bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] text-white';
+    if (platform === 'YouTube') return 'bg-[#FF0000] text-white';
+    return 'bg-slate-900 text-white';
   };
 
   const actionButtonStyle = () => {
@@ -269,23 +393,28 @@ function CreatorWorkbenchInner() {
     return 'bg-slate-900 text-white hover:bg-slate-700';
   };
 
+  const isPaid = quota.profile?.is_paid ?? false;
+  const maxDailyExports = isPaid ? 10 : 1;
+  const maxMonthlyExports = isPaid ? 300 : 1;
+
   return (
     <main className="min-h-screen bg-transparent text-slate-900">
+      <QuotaModal open={quotaModalOpen} title="额度已用完" message={quotaMessage} onClose={() => setQuotaModalOpen(false)} />
       <QuotaModal
-        open={quotaModalOpen}
-        title="额度已用完"
-        message={quotaMessage}
-        onClose={() => setQuotaModalOpen(false)}
+        open={exportModalOpen}
+        title="导出数据"
+        message={`确定导出当前筛选结果（最多1000条）？今日已导出 ${exportCount.today}/${maxDailyExports} 次，本月已导出 ${exportCount.month}/${maxMonthlyExports} 次。`}
+        onClose={() => setExportModalOpen(false)}
+        onConfirm={handleExport}
+        confirmText={exporting ? '导出中...' : '确认导出'}
       />
       <div className="mx-auto max-w-5xl px-4 pb-14 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
         <section className="rounded-3xl border border-zinc-200/80 bg-white/80 p-6 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.25)] backdrop-blur-xl sm:p-8">
           <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">全平台达人查询</h2>
-          <p className="mt-3 text-sm text-zinc-600 sm:text-base">
-            输入账号、关键词或赛道标签，快速筛选潜力达人并查看核心数据画像。
-          </p>
+          <p className="mt-3 text-sm text-zinc-600 sm:text-base">输入账号、关键词或赛道标签，快速筛选潜力达人并查看核心数据画像。</p>
 
-          <div className="mt-8 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-3 sm:p-4">
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 sm:p-5">
+            <div className="flex flex-wrap gap-2 mb-5">
               {platforms.map((platform) => {
                 const isActive = activePlatform === platform;
                 return (
@@ -293,10 +422,8 @@ function CreatorWorkbenchInner() {
                     key={platform}
                     type="button"
                     onClick={() => setActivePlatform(platform)}
-                    className={`rounded-xl border border-zinc-200/80 px-4 py-2 text-sm font-medium transition-all sm:px-5 ${
-                      isActive
-                        ? platformActiveStyle(platform)
-                        : `bg-white/90 text-zinc-600 hover:bg-white ${platformAccent(platform)}`
+                    className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
+                      isActive ? platformActiveStyle(platform) : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
                     }`}
                   >
                     {platform}
@@ -305,63 +432,105 @@ function CreatorWorkbenchInner() {
               })}
             </div>
 
-            <div className="mt-3 grid gap-3 rounded-xl border border-zinc-200 bg-white p-3 shadow-sm sm:grid-cols-2">
-              <label className="flex flex-col gap-1">
-                <span className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">粉丝量</span>
-                <select
-                  value={followerRange}
-                  onChange={(event) => setFollowerRange(event.target.value as FollowerRange)}
-                  className="h-10 rounded-lg border border-zinc-200 bg-white/90 px-3 text-sm text-slate-900 outline-none transition focus:border-slate-900"
-                >
-                  <option value="any">不限</option>
-                  <option value="0-10k">0 - 1 万</option>
-                  <option value="10k-100k">1 万 - 10 万</option>
-                  <option value="100k-1m">10 万 - 100 万</option>
-                  <option value="1m+">100 万以上</option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">国家地区</span>
-                <select
-                  value={region}
-                  onChange={(event) => setRegion(event.target.value as Region)}
-                  className="h-10 rounded-lg border border-zinc-200 bg-white/90 px-3 text-sm text-slate-900 outline-none transition focus:border-slate-900"
-                >
-                  <option value="any">不限</option>
-                  <option value="us">北美 · 美国</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="mt-3 flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-2 shadow-sm sm:flex-row sm:items-center">
-              <div className="flex flex-1 items-center rounded-lg px-3 py-2">
-                <Search size={20} className="mr-3 text-zinc-400" />
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setSearchMode('name')}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      searchMode === 'name' ? 'bg-slate-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                    }`}
+                  >
+                    频道
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchMode('tag')}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      searchMode === 'tag' ? 'bg-slate-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                    }`}
+                  >
+                    标签
+                  </button>
+                </div>
+                <div className="h-5 w-px bg-zinc-200" />
+                <Search size={18} className="text-zinc-400 shrink-0" />
                 <input
                   type="text"
                   aria-label={`${activePlatform} creator search`}
-                  placeholder={`搜索 ${activePlatform} 达人名称 / 账号 / 关键词`}
+                  placeholder={searchMode === 'name' ? `搜索达人频道 / Handle` : `搜索标签 / 关键词`}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') runSearchClick();
-                  }}
-                  className="w-full bg-transparent text-sm text-slate-800 outline-none placeholder:text-zinc-400 sm:text-base"
+                  onKeyDown={(e) => { if (e.key === 'Enter') runSearchClick(); }}
+                  className="flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-zinc-400"
                 />
+                <button
+                  type="button"
+                  onClick={runSearchClick}
+                  className={`shrink-0 inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition ${actionButtonStyle()}`}
+                >
+                  {loading ? '查询中…' : '查询'}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  runSearchClick();
-                }}
-                className={`inline-flex items-center justify-center rounded-lg px-6 py-3 text-sm font-medium transition sm:text-base ${actionButtonStyle()}`}
-              >
-                {loading ? '查询中…' : '查询达人'}
-              </button>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-500">粉丝量</span>
+                  <select
+                    value={followerRange}
+                    onChange={(e) => setFollowerRange(e.target.value as FollowerRange)}
+                    className="h-8 rounded-lg border border-zinc-200 bg-white px-3 text-xs text-slate-900 outline-none transition focus:border-slate-900"
+                  >
+                    {followerOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  {followerRange === 'custom' && (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        placeholder="最小"
+                        value={customFollowerMin ?? ''}
+                        onChange={(e) => setCustomFollowerMin(e.target.value ? parseInt(e.target.value, 10) : null)}
+                        className="h-8 w-20 rounded-lg border border-zinc-200 bg-white px-2 text-xs text-slate-900 outline-none"
+                      />
+                      <span className="text-xs text-zinc-400">-</span>
+                      <input
+                        type="number"
+                        placeholder="最大"
+                        value={customFollowerMax ?? ''}
+                        onChange={(e) => setCustomFollowerMax(e.target.value ? parseInt(e.target.value, 10) : null)}
+                        className="h-8 w-20 rounded-lg border border-zinc-200 bg-white px-2 text-xs text-slate-900 outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-5 w-px bg-zinc-200" />
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-zinc-500">地区</span>
+                  <select
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value as Region)}
+                    className="h-8 rounded-lg border border-zinc-200 bg-white px-3 text-xs text-slate-900 outline-none transition focus:border-slate-900"
+                  >
+                    {regionGroups.map((group) => (
+                      <optgroup key={group.group} label={group.group}>
+                        {group.options.map((opt) => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
             {error ? <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
-            <div className="mt-4 overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
+            <div className="mt-5 overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
               <div className="grid grid-cols-12 gap-3 border-b border-zinc-100 bg-white/70 px-4 py-3 text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">
                 <div className="col-span-4">达人</div>
                 <div className="col-span-2">粉丝</div>
@@ -374,20 +543,10 @@ function CreatorWorkbenchInner() {
                 <div className="px-4 py-10 text-center text-sm text-zinc-500">
                   <div>暂无结果</div>
                   <div className="mt-2 text-xs text-zinc-500">
-                    当前筛选：平台 {activePlatform === 'All' ? '全部' : activePlatform} · 粉丝量 {followerRange === 'any' ? '不限' : followerRange} · 地区{' '}
-                    {region === 'any' ? '不限' : '北美·美国'}
-                  </div>
-                  <div className="mt-2 text-xs text-zinc-500">
-                    {lastFetchedAt
-                      ? '已成功请求数据库但返回 0 条：可能是表里确实没数据，或 influencers 表开启了 RLS 仅允许特定条件读取。'
-                      : '点击“查询达人”开始从数据库加载列表。'}
+                    当前筛选：平台 {activePlatform === 'All' ? '全部' : activePlatform} · 粉丝量 {followerRange === 'any' ? '不限' : followerRange} · 地区 {region === 'any' ? '不限' : region}
                   </div>
                   <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={runSearchClick}
-                      className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900"
-                    >
+                    <button type="button" onClick={runSearchClick} className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900">
                       重新加载
                     </button>
                   </div>
@@ -416,12 +575,7 @@ function CreatorWorkbenchInner() {
                         </div>
                         <div className="col-span-2 text-right">
                           {item.link ? (
-                            <a
-                              href={item.link}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900"
-                            >
+                            <a href={item.link} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900">
                               打开
                             </a>
                           ) : (
@@ -437,36 +591,42 @@ function CreatorWorkbenchInner() {
 
             <div className="mt-4 flex items-center justify-between">
               <div className="text-xs text-zinc-500">
-                每页 10 条
-                {typeof totalCount === 'number' ? ` · 共 ${totalCount} 条` : ''}
+                每页 10 条{typeof totalCount === 'number' ? ` · 共 ${totalCount} 条` : ''}
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   disabled={page <= 1 || loading}
-                  onClick={() => {
-                    const nextPage = Math.max(1, page - 1);
-                    setPage(nextPage);
-                    runSearch(true, nextPage);
-                  }}
-                  className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={() => { const nextPage = Math.max(1, page - 1); setPage(nextPage); runSearch(true, nextPage); }}
+                  className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   上一页
                 </button>
-                <div className="min-w-[76px] text-center text-xs font-semibold text-zinc-700 tabular-nums">{page}</div>
+                <div className="min-w-[40px] text-center text-xs font-semibold text-zinc-700 tabular-nums">{page}</div>
                 <button
                   type="button"
                   disabled={loading || (typeof totalCount === 'number' ? page * 10 >= totalCount : results.length < 10)}
-                  onClick={() => {
-                    const nextPage = page + 1;
-                    setPage(nextPage);
-                    runSearch(true, nextPage);
-                  }}
-                  className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={() => { const nextPage = page + 1; setPage(nextPage); runSearch(true, nextPage); }}
+                  className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   下一页
                 </button>
               </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between border-t border-zinc-200 pt-4">
+              <div className="text-xs text-zinc-500">
+                导出额度：今日 {exportCount.today}/{maxDailyExports} 次 · 本月 {exportCount.month}/{maxMonthlyExports} 次
+              </div>
+              <button
+                type="button"
+                onClick={() => setExportModalOpen(true)}
+                disabled={loading || results.length === 0}
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Download size={14} />
+                导出 CSV
+              </button>
             </div>
           </div>
         </section>
