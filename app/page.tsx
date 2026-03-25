@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Database, Eye, FileText, Merge, Search } from 'lucide-react';
+import { ArrowRight, Database, Eye, FileText, Merge, Search, QrCode } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import QuotaModal from '../components/QuotaModal';
 import { useSearchQuota } from '../hooks/useSearchQuota';
@@ -97,21 +97,21 @@ export default function Home() {
     <main className="min-h-screen bg-transparent text-slate-900">
       <QuotaModal open={quotaModalOpen} title="额度已用完" message={quotaMessage} onClose={() => setQuotaModalOpen(false)} />
       <div className="mx-auto max-w-6xl px-4 pb-14 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
-        <section className="relative overflow-hidden rounded-[28px] border border-zinc-200/80 bg-white/80 px-6 py-10 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.25)] backdrop-blur-xl md:px-9 md:py-14 lg:px-12">
+        <section className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 px-4 py-8 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.25)] backdrop-blur-xl sm:px-6 sm:py-10 lg:px-8 lg:py-12">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-zinc-100/70 to-transparent" />
           <div className="relative">
-            <p className="mb-4 inline-flex items-center rounded-full border border-zinc-200 bg-white/90 px-4 py-1 text-[11px] font-semibold tracking-[0.14em] text-zinc-600 uppercase">
+            <p className="mb-3 text-center text-[10px] font-semibold tracking-[0.14em] text-zinc-600 uppercase sm:mb-4 sm:text-[11px]">
               Professional Creator Marketing OS
             </p>
-            <h1 className="text-[clamp(0.9rem,4.2vw,3.8rem)] font-semibold leading-tight tracking-tight whitespace-nowrap text-slate-900">
+            <h1 className="text-center text-[clamp(1.2rem,8vw,2.5rem)] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[clamp(1.5rem,6vw,3rem)] lg:text-[clamp(1.8rem,5vw,3.8rem)]">
               全球全平台达人数据分析 &amp; 营销平台
             </h1>
-            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-zinc-600 sm:text-base">
+            <p className="mt-3 max-w-2xl mx-auto text-center text-xs leading-relaxed text-zinc-500 sm:mt-4 sm:text-sm lg:text-base">
               从达人发现、数据洞察到营销执行，一站式覆盖 IG、YouTube、TikTok 的增长工作流。
             </p>
 
-            <div className="mt-8 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 sm:p-5">
-              <div className="flex flex-wrap gap-2 mb-5">
+            <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-3 sm:mt-8 sm:p-4 lg:p-5">
+              <div className="flex flex-wrap justify-center gap-2 mb-4 sm:mb-5">
                 {platforms.map((platform) => {
                   const isActive = activePlatform === platform;
                   return (
@@ -119,7 +119,7 @@ export default function Home() {
                       key={platform}
                       type="button"
                       onClick={() => setActivePlatform(platform)}
-                      className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
+                      className={`rounded-full px-4 py-2 text-xs font-medium transition-all sm:px-5 sm:py-2.5 sm:text-sm ${
                         isActive ? platformActiveStyle(platform) : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
                       }`}
                     >
@@ -130,12 +130,12 @@ export default function Home() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
-                  <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-sm">
+                  <div className="flex items-center gap-1.5 shrink-0 sm:border-r sm:border-zinc-200 sm:pr-3 sm:mr-3">
                     <button
                       type="button"
                       onClick={() => setSearchMode('name')}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      className={`px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all sm:px-3 sm:py-1.5 sm:text-xs ${
                         searchMode === 'name' ? 'bg-slate-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                       }`}
                     >
@@ -144,28 +144,29 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => setSearchMode('tag')}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      className={`px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all sm:px-3 sm:py-1.5 sm:text-xs ${
                         searchMode === 'tag' ? 'bg-slate-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                       }`}
                     >
                       标签
                     </button>
                   </div>
-                  <div className="h-5 w-px bg-zinc-200" />
-                  <Search size={18} className="text-zinc-400 shrink-0" />
-                  <input
-                    type="text"
-                    aria-label={`${activePlatform} influencer search`}
-                    placeholder={searchMode === 'name' ? `搜索达人频道 / Handle` : `搜索标签 / 关键词`}
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                    className="flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-zinc-400"
-                  />
+                  <div className="flex-1 flex items-center gap-2">
+                    <Search size={16} className="text-zinc-400 shrink-0" />
+                    <input
+                      type="text"
+                      aria-label={`${activePlatform} influencer search`}
+                      placeholder={searchMode === 'name' ? `搜索达人频道 / Handle` : `搜索标签 / 关键词`}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                      className="flex-1 bg-transparent text-xs text-slate-800 outline-none placeholder:text-zinc-400 sm:text-sm"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={handleSearch}
-                    className={`shrink-0 inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition ${actionButtonStyle()}`}
+                    className={`shrink-0 inline-flex items-center justify-center rounded-full px-4 py-1.5 text-xs font-medium transition sm:px-5 sm:py-2 sm:text-sm ${actionButtonStyle()}`}
                   >
                     搜索
                   </button>
@@ -173,11 +174,11 @@ export default function Home() {
 
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-500">粉丝量</span>
+                    <span className="text-[10px] text-zinc-500 sm:text-xs">粉丝量</span>
                     <select
                       value={followerRange}
                       onChange={(e) => setFollowerRange(e.target.value as FollowerRange)}
-                      className="h-8 rounded-lg border border-zinc-200 bg-white px-3 text-xs text-slate-900 outline-none transition focus:border-slate-900"
+                      className="h-7 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none transition focus:border-slate-900 sm:h-8 sm:px-3 sm:text-xs"
                     >
                       {followerOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -190,28 +191,28 @@ export default function Home() {
                           placeholder="最小"
                           value={customFollowerMin}
                           onChange={(e) => setCustomFollowerMin(e.target.value)}
-                          className="h-8 w-20 rounded-lg border border-zinc-200 bg-white px-2 text-xs text-slate-900 outline-none"
+                          className="h-7 w-16 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none sm:h-8 sm:w-20 sm:px-2 sm:text-xs"
                         />
-                        <span className="text-xs text-zinc-400">-</span>
+                        <span className="text-[10px] text-zinc-400 sm:text-xs">-</span>
                         <input
                           type="number"
                           placeholder="最大"
                           value={customFollowerMax}
                           onChange={(e) => setCustomFollowerMax(e.target.value)}
-                          className="h-8 w-20 rounded-lg border border-zinc-200 bg-white px-2 text-xs text-slate-900 outline-none"
+                          className="h-7 w-16 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none sm:h-8 sm:w-20 sm:px-2 sm:text-xs"
                         />
                       </div>
                     )}
                   </div>
 
-                  <div className="h-5 w-px bg-zinc-200" />
+                  <div className="h-5 w-px bg-zinc-200 hidden sm:block" />
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-500">地区</span>
+                    <span className="text-[10px] text-zinc-500 sm:text-xs">地区</span>
                     <select
                       value={region}
                       onChange={(e) => setRegion(e.target.value as Region)}
-                      className="h-8 rounded-lg border border-zinc-200 bg-white px-3 text-xs text-slate-900 outline-none transition focus:border-slate-900"
+                      className="h-7 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none transition focus:border-slate-900 sm:h-8 sm:px-3 sm:text-xs"
                     >
                       {regionGroups.map((group) => (
                         <optgroup key={group.group} label={group.group}>
@@ -228,37 +229,32 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="relative mt-10 overflow-hidden rounded-[28px] border border-zinc-200/80 bg-white/80 p-4 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.25)] backdrop-blur-xl sm:p-5">
+        <section className="relative mt-8 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 p-3 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)] sm:mt-10 sm:p-4 lg:p-5">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-zinc-100/70 to-transparent" />
           <div className="relative">
-            <div className="mb-4 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold tracking-[0.14em] text-zinc-500 uppercase">Products & Downloads</p>
-                <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">产品系列与下载中心</h2>
-                <p className="mt-2 text-xs text-zinc-600 sm:text-sm">在一个列表中查看全部工具，并跳转到各工具的独立介绍与下载页面。</p>
-              </div>
-              <span className="hidden rounded-full border border-zinc-200 bg-white/90 px-3 py-1 text-xs font-medium text-zinc-500 sm:inline-flex">
-                首页直达 · 全部工具
-              </span>
+            <div className="mb-4 sm:mb-5">
+              <p className="text-[10px] font-bold tracking-[0.14em] text-zinc-500 uppercase sm:text-[11px]">PRODUCTS & DOWNLOADS</p>
+              <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900 sm:mt-2 sm:text-lg lg:text-xl">产品系列与下载中心</h2>
+              <p className="mt-1 text-[10px] text-zinc-600 sm:mt-2 sm:text-xs lg:text-sm">在一个列表中查看全部工具，并跳转到各工具的独立介绍与下载页面。</p>
             </div>
 
             <ul className="overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
               {tools.map((tool) => {
                 const Icon = tool.icon;
                 return (
-                  <li key={tool.title} className="group flex flex-col gap-3 border-b border-zinc-100 px-4 py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <div className="inline-flex rounded-lg bg-zinc-100 p-2.5 text-zinc-700">
-                        <Icon size={18} />
+                  <li key={tool.title} className="group flex items-center justify-between border-b border-zinc-100 px-3 py-3 last:border-b-0 sm:px-4 sm:py-3 lg:px-5 lg:py-3">
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                      <div className="inline-flex rounded-lg bg-zinc-100 p-2 text-slate-900 sm:p-1.5">
+                        <Icon style={{width: '16px', height: '16px'}} />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-base">{tool.title}</h3>
-                        <p className="mt-1 text-xs leading-5 text-zinc-600 sm:text-sm">{tool.description}</p>
+                        <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-sm lg:text-base">{tool.title}</h3>
+                        <p className="mt-0.5 text-[10px] leading-4 text-zinc-600 sm:mt-1 sm:text-xs lg:text-sm">{tool.description}</p>
                       </div>
                     </div>
-                    <Link href={tool.href} className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 sm:text-sm">
+                    <Link href={tool.href} className="inline-flex items-center gap-1 rounded border border-zinc-300 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-900 transition hover:border-slate-900 hover:text-slate-900 sm:px-2.5 sm:py-1 sm:text-xs lg:px-3 lg:py-1.5 whitespace-nowrap">
                       立即使用
-                      <ArrowRight size={14} />
+                      <ArrowRight size={10} />
                     </Link>
                   </li>
                 );
@@ -266,6 +262,8 @@ export default function Home() {
             </ul>
           </div>
         </section>
+
+
       </div>
     </main>
   );

@@ -409,12 +409,12 @@ function CreatorWorkbenchInner() {
         confirmText={exporting ? '导出中...' : '确认导出'}
       />
       <div className="mx-auto max-w-5xl px-4 pb-14 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
-        <section className="rounded-3xl border border-zinc-200/80 bg-white/80 p-6 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.25)] backdrop-blur-xl sm:p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">全平台达人查询</h2>
-          <p className="mt-3 text-sm text-zinc-600 sm:text-base">输入账号、关键词或赛道标签，快速筛选潜力达人并查看核心数据画像。</p>
+        <section className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.25)] backdrop-blur-xl sm:p-6 lg:p-8">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl lg:text-3xl">全平台达人查询</h2>
+          <p className="mt-2 text-xs text-zinc-600 sm:mt-3 sm:text-sm lg:text-base">输入账号、关键词或赛道标签，快速筛选潜力达人并查看核心数据画像。</p>
 
-          <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 sm:p-5">
-            <div className="flex flex-wrap gap-2 mb-5">
+          <div className="mt-5 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-3 sm:mt-6 sm:p-4 lg:p-5">
+            <div className="flex flex-wrap justify-center gap-2 mb-4 sm:mb-5">
               {platforms.map((platform) => {
                 const isActive = activePlatform === platform;
                 return (
@@ -422,7 +422,7 @@ function CreatorWorkbenchInner() {
                     key={platform}
                     type="button"
                     onClick={() => setActivePlatform(platform)}
-                    className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
+                    className={`rounded-full px-4 py-2 text-xs font-medium transition-all sm:px-5 sm:py-2.5 sm:text-sm ${
                       isActive ? platformActiveStyle(platform) : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
                     }`}
                   >
@@ -433,12 +433,12 @@ function CreatorWorkbenchInner() {
             </div>
 
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-3 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm">
-                <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-sm">
+                <div className="flex items-center gap-1.5 shrink-0 sm:border-r sm:border-zinc-200 sm:pr-3 sm:mr-3">
                   <button
                     type="button"
                     onClick={() => setSearchMode('name')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    className={`px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all sm:px-3 sm:py-1.5 sm:text-xs ${
                       searchMode === 'name' ? 'bg-slate-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                     }`}
                   >
@@ -447,28 +447,29 @@ function CreatorWorkbenchInner() {
                   <button
                     type="button"
                     onClick={() => setSearchMode('tag')}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    className={`px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all sm:px-3 sm:py-1.5 sm:text-xs ${
                       searchMode === 'tag' ? 'bg-slate-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                     }`}
                   >
                     标签
                   </button>
                 </div>
-                <div className="h-5 w-px bg-zinc-200" />
-                <Search size={18} className="text-zinc-400 shrink-0" />
-                <input
-                  type="text"
-                  aria-label={`${activePlatform} creator search`}
-                  placeholder={searchMode === 'name' ? `搜索达人频道 / Handle` : `搜索标签 / 关键词`}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') runSearchClick(); }}
-                  className="flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-zinc-400"
-                />
+                <div className="flex-1 flex items-center gap-2">
+                  <Search size={16} className="text-zinc-400 shrink-0" />
+                  <input
+                    type="text"
+                    aria-label={`${activePlatform} creator search`}
+                    placeholder={searchMode === 'name' ? `搜索达人频道 / Handle` : `搜索标签 / 关键词`}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') runSearchClick(); }}
+                    className="flex-1 bg-transparent text-xs text-slate-800 outline-none placeholder:text-zinc-400 sm:text-sm"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={runSearchClick}
-                  className={`shrink-0 inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition ${actionButtonStyle()}`}
+                  className={`shrink-0 inline-flex items-center justify-center rounded-full px-4 py-1.5 text-xs font-medium transition sm:px-5 sm:py-2 sm:text-sm ${actionButtonStyle()}`}
                 >
                   {loading ? '查询中…' : '查询'}
                 </button>
@@ -476,11 +477,11 @@ function CreatorWorkbenchInner() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500">粉丝量</span>
+                  <span className="text-[10px] text-zinc-500 sm:text-xs">粉丝量</span>
                   <select
                     value={followerRange}
                     onChange={(e) => setFollowerRange(e.target.value as FollowerRange)}
-                    className="h-8 rounded-lg border border-zinc-200 bg-white px-3 text-xs text-slate-900 outline-none transition focus:border-slate-900"
+                    className="h-7 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none transition focus:border-slate-900 sm:h-8 sm:px-3 sm:text-xs"
                   >
                     {followerOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -493,28 +494,28 @@ function CreatorWorkbenchInner() {
                         placeholder="最小"
                         value={customFollowerMin ?? ''}
                         onChange={(e) => setCustomFollowerMin(e.target.value ? parseInt(e.target.value, 10) : null)}
-                        className="h-8 w-20 rounded-lg border border-zinc-200 bg-white px-2 text-xs text-slate-900 outline-none"
+                        className="h-7 w-16 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none sm:h-8 sm:w-20 sm:px-2 sm:text-xs"
                       />
-                      <span className="text-xs text-zinc-400">-</span>
+                      <span className="text-[10px] text-zinc-400 sm:text-xs">-</span>
                       <input
                         type="number"
                         placeholder="最大"
                         value={customFollowerMax ?? ''}
                         onChange={(e) => setCustomFollowerMax(e.target.value ? parseInt(e.target.value, 10) : null)}
-                        className="h-8 w-20 rounded-lg border border-zinc-200 bg-white px-2 text-xs text-slate-900 outline-none"
+                        className="h-7 w-16 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none sm:h-8 sm:w-20 sm:px-2 sm:text-xs"
                       />
                     </div>
                   )}
                 </div>
 
-                <div className="h-5 w-px bg-zinc-200" />
+                <div className="h-5 w-px bg-zinc-200 hidden sm:block" />
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-zinc-500">地区</span>
+                  <span className="text-[10px] text-zinc-500 sm:text-xs">地区</span>
                   <select
                     value={region}
                     onChange={(e) => setRegion(e.target.value as Region)}
-                    className="h-8 rounded-lg border border-zinc-200 bg-white px-3 text-xs text-slate-900 outline-none transition focus:border-slate-900"
+                    className="h-7 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none transition focus:border-slate-900 sm:h-8 sm:px-3 sm:text-xs"
                   >
                     {regionGroups.map((group) => (
                       <optgroup key={group.group} label={group.group}>
@@ -530,63 +531,67 @@ function CreatorWorkbenchInner() {
 
             {error ? <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div> : null}
 
-            <div className="mt-5 overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
-              <div className="grid grid-cols-12 gap-3 border-b border-zinc-100 bg-white/70 px-4 py-3 text-[11px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">
-                <div className="col-span-4">达人</div>
-                <div className="col-span-2">粉丝</div>
-                <div className="col-span-2">均播</div>
-                <div className="col-span-2">地区</div>
-                <div className="col-span-2 text-right">链接</div>
-              </div>
+            <div className="mt-5 overflow-x-auto">
+              <div className="min-w-[600px]">
+                <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
+                  <div className="grid grid-cols-12 gap-3 border-b border-zinc-100 bg-white/70 px-4 py-3 text-[10px] font-semibold tracking-[0.12em] text-zinc-500 uppercase">
+                    <div className="col-span-4">达人</div>
+                    <div className="col-span-2">粉丝</div>
+                    <div className="col-span-2">均播</div>
+                    <div className="col-span-2">地区</div>
+                    <div className="col-span-2 text-right">链接</div>
+                  </div>
 
-              {results.length === 0 ? (
-                <div className="px-4 py-10 text-center text-sm text-zinc-500">
-                  <div>暂无结果</div>
-                  <div className="mt-2 text-xs text-zinc-500">
-                    当前筛选：平台 {activePlatform === 'All' ? '全部' : activePlatform} · 粉丝量 {followerRange === 'any' ? '不限' : followerRange} · 地区 {region === 'any' ? '不限' : region}
-                  </div>
-                  <div className="mt-4">
-                    <button type="button" onClick={runSearchClick} className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900">
-                      重新加载
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <ul>
-                  {results.map((item, idx) => (
-                    <li key={`${item.username ?? item.nickname ?? 'row'}-${idx}`} className="border-b border-zinc-100 last:border-b-0">
-                      <div className="grid grid-cols-12 gap-3 px-4 py-4">
-                        <div className="col-span-4 min-w-0">
-                          <div className="truncate text-sm font-semibold text-slate-900">{item.nickname ?? '-'}</div>
-                          <div className="mt-1 flex min-w-0 items-center gap-2">
-                            <div className="truncate text-xs text-zinc-500">{item.username ? `@${item.username}` : ''}</div>
-                            {item.tags ? (
-                              <span className="shrink-0 rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-zinc-600">
-                                {item.tags.split(',')[0].trim()}
-                              </span>
-                            ) : null}
-                            <PlatformBadge value={item.platform} />
-                          </div>
-                        </div>
-                        <div className="col-span-2 text-sm font-medium text-slate-900 tabular-nums">{formatCompactZh(item.fans_num)}</div>
-                        <div className="col-span-2 text-sm text-zinc-700 tabular-nums">{formatCompactZh(item.view_avg)}</div>
-                        <div className="col-span-2 min-w-0">
-                          <div className="truncate text-sm text-zinc-700">{item.region_zh ?? '-'}</div>
-                        </div>
-                        <div className="col-span-2 text-right">
-                          {item.link ? (
-                            <a href={item.link} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900">
-                              打开
-                            </a>
-                          ) : (
-                            <span className="text-xs text-zinc-400">-</span>
-                          )}
-                        </div>
+                  {results.length === 0 ? (
+                    <div className="px-4 py-10 text-center text-sm text-zinc-500">
+                      <div>暂无结果</div>
+                      <div className="mt-2 text-xs text-zinc-500">
+                        当前筛选：平台 {activePlatform === 'All' ? '全部' : activePlatform} · 粉丝量 {followerRange === 'any' ? '不限' : followerRange} · 地区 {region === 'any' ? '不限' : region}
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                      <div className="mt-4">
+                        <button type="button" onClick={runSearchClick} className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900">
+                          重新加载
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <ul>
+                      {results.map((item, idx) => (
+                        <li key={`${item.username ?? item.nickname ?? 'row'}-${idx}`} className="border-b border-zinc-100 last:border-b-0">
+                          <div className="grid grid-cols-12 gap-3 px-4 py-3 sm:py-4">
+                            <div className="col-span-4 min-w-0">
+                              <div className="truncate text-sm font-semibold text-slate-900">{item.nickname ?? '-'}</div>
+                              <div className="mt-1 flex min-w-0 items-center gap-2 flex-wrap">
+                                <div className="truncate text-xs text-zinc-500">{item.username ? `@${item.username}` : ''}</div>
+                                {item.tags ? (
+                                  <span className="shrink-0 rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-zinc-600">
+                                    {item.tags.split(',')[0].trim()}
+                                  </span>
+                                ) : null}
+                                <PlatformBadge value={item.platform} />
+                              </div>
+                            </div>
+                            <div className="col-span-2 text-sm font-medium text-slate-900 tabular-nums">{formatCompactZh(item.fans_num)}</div>
+                            <div className="col-span-2 text-sm text-zinc-700 tabular-nums">{formatCompactZh(item.view_avg)}</div>
+                            <div className="col-span-2 min-w-0">
+                              <div className="truncate text-sm text-zinc-700">{item.region_zh ?? '-'}</div>
+                            </div>
+                            <div className="col-span-2 text-right">
+                              {item.link ? (
+                                <a href={item.link} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900">
+                                  打开
+                                </a>
+                              ) : (
+                                <span className="text-xs text-zinc-400">-</span>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="mt-4 flex items-center justify-between">
@@ -598,7 +603,7 @@ function CreatorWorkbenchInner() {
                   type="button"
                   disabled={page <= 1 || loading}
                   onClick={() => { const nextPage = Math.max(1, page - 1); setPage(nextPage); runSearch(true, nextPage); }}
-                  className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2"
                 >
                   上一页
                 </button>
@@ -607,14 +612,14 @@ function CreatorWorkbenchInner() {
                   type="button"
                   disabled={loading || (typeof totalCount === 'number' ? page * 10 >= totalCount : results.length < 10)}
                   onClick={() => { const nextPage = page + 1; setPage(nextPage); runSearch(true, nextPage); }}
-                  className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2"
                 >
                   下一页
                 </button>
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between border-t border-zinc-200 pt-4">
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-zinc-200 pt-4">
               <div className="text-xs text-zinc-500">
                 导出额度：今日 {exportCount.today}/{maxDailyExports} 次 · 本月 {exportCount.month}/{maxMonthlyExports} 次
               </div>
@@ -622,7 +627,7 @@ function CreatorWorkbenchInner() {
                 type="button"
                 onClick={() => setExportModalOpen(true)}
                 disabled={loading || results.length === 0}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-2"
               >
                 <Download size={14} />
                 导出 CSV
