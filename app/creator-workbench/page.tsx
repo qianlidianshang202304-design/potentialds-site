@@ -245,7 +245,13 @@ function CreatorWorkbenchInner() {
               qy = qy.or(`nickname.ilike.%${safe}%,username.ilike.%${safe}%`);
             } else if (searchMode === 'tag' && !missingColumns.has('tags')) {
               const safe = keyword.replace(/,/g, ' ');
-              qy = qy.ilike('tags', `%${safe}%`);
+              const keywords = safe.split(/\s+/).filter(k => k.length > 0);
+              if (keywords.length > 0) {
+                const conditions = keywords.map(key => `tags.ilike.%${key}%`).join(',');
+                qy = qy.or(conditions);
+              } else {
+                qy = qy.ilike('tags', `%${safe}%`);
+              }
             }
           }
 
@@ -331,7 +337,13 @@ function CreatorWorkbenchInner() {
           qy = qy.or(`nickname.ilike.%${safe}%,username.ilike.%${safe}%`);
         } else {
           const safe = keyword.replace(/,/g, ' ');
-          qy = qy.ilike('tags', `%${safe}%`);
+          const keywords = safe.split(/\s+/).filter(k => k.length > 0);
+          if (keywords.length > 0) {
+            const conditions = keywords.map(key => `tags.ilike.%${key}%`).join(',');
+            qy = qy.or(conditions);
+          } else {
+            qy = qy.ilike('tags', `%${safe}%`);
+          }
         }
       }
 
@@ -560,21 +572,32 @@ function CreatorWorkbenchInner() {
                         <li key={`${item.username ?? item.nickname ?? 'row'}-${idx}`} className="border-b border-zinc-100 last:border-b-0">
                           <div className="grid grid-cols-12 gap-3 px-4 py-3 sm:py-4">
                             <div className="col-span-4 min-w-0">
-                              <div className="truncate text-sm font-semibold text-slate-900">{item.nickname ?? '-'}</div>
-                              <div className="mt-1 flex min-w-0 items-center gap-2 flex-wrap">
+                              <div className="flex min-w-0 items-center gap-2">
+                                <div className="truncate text-sm font-semibold text-slate-900">{item.nickname ?? '-'}</div>
+                                <PlatformBadge value={item.platform} />
+                              </div>
+                              <div className="mt-1 flex min-w-0 items-center gap-2 whitespace-nowrap overflow-hidden">
                                 <div className="truncate text-xs text-zinc-500">{item.username ? `@${item.username}` : ''}</div>
                                 {item.tags ? (
-                                  <span className="shrink-0 rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-zinc-600">
-                                    {item.tags.split(',')[0].trim()}
-                                  </span>
+                                  <>
+                                    {item.tags.split(',').slice(0, 2).map((tag, index) => (
+                                      <span key={index} className="shrink-0 rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-zinc-600 mr-1">
+                                        {tag.trim()}
+                                      </span>
+                                    ))}
+                                    {item.tags.split(',').length > 2 && (
+                                      <span className="shrink-0 rounded-full border border-zinc-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-zinc-600">
+                                        ...
+                                      </span>
+                                    )}
+                                  </>
                                 ) : null}
-                                <PlatformBadge value={item.platform} />
                               </div>
                             </div>
                             <div className="col-span-2 text-sm font-medium text-slate-900 tabular-nums">{formatCompactZh(item.fans_num)}</div>
                             <div className="col-span-2 text-sm text-zinc-700 tabular-nums">{formatCompactZh(item.view_avg)}</div>
                             <div className="col-span-2 min-w-0">
-                              <div className="truncate text-sm text-zinc-700">{item.region_zh ?? '-'}</div>
+                              <div className="truncate text-xs text-zinc-600">{item.region_zh ?? '-'}</div>
                             </div>
                             <div className="col-span-2 text-right">
                               {item.link ? (
