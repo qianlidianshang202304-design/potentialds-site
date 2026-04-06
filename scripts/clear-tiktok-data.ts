@@ -25,25 +25,25 @@ async function main() {
     let deletedCount = 0;
     
     while (true) {
-      const { error, count } = await supabase
+      const { data, error } = await supabase
         .from('influencers')
         .delete()
         .eq('platform', 'tiktok')
         .limit(batchSize)
-        .select('*', { count: 'exact' });
+        .select('*');
 
       if (error) {
         console.error('Error deleting TikTok data:', error);
         throw error;
       }
 
-      const batchDeleted = count || 0;
+      const batchDeleted = data?.length || 0;
       deletedCount += batchDeleted;
-      
+
       console.log(`Deleted ${batchDeleted} records (total: ${deletedCount})`);
-      
+
       if (batchDeleted < batchSize) {
-        break; // 没有更多数据可删除
+        break;
       }
     }
 

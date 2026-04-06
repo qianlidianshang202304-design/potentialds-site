@@ -257,7 +257,7 @@ async function main() {
           }
           
           // 处理表头
-          const headers = rows[0];
+          const headers = rows[0] as string[];
           console.log('Headers:', headers.slice(0, 10)); // 只显示前10个表头
           
           // 处理数据行
@@ -267,7 +267,7 @@ async function main() {
               break;
             }
             
-            const row = rows[i];
+            const row = rows[i] as string[];
             const item: InfluencerInsert = {
               platform: 'tiktok', // Set platform to TikTok
             };
