@@ -37,6 +37,10 @@ export async function ensureProfile(userId: string) {
     browse_limit: 2000,
     browse_used: 0,
     browse_month: currentMonthKey(),
+    export_today: 0,
+    export_month: 0,
+    export_date: new Date().toISOString().split('T')[0],
+    subscription_type: 'free', // free, monthly, yearly
   };
 
   let payload: Record<string, unknown> = { ...basePayload };

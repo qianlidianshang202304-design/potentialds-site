@@ -573,11 +573,11 @@ function CreatorWorkbenchInner() {
                           <div className="grid grid-cols-12 gap-3 px-4 py-3 sm:py-4">
                             <div className="col-span-4 min-w-0">
                               <div className="flex min-w-0 items-center gap-2">
-                                <div className="truncate text-sm font-semibold text-slate-900">{item.nickname ?? '-'}</div>
+                                <div className="truncate text-sm font-semibold text-slate-900">{item.username ? `@${item.username}` : '-'}</div>
                                 <PlatformBadge value={item.platform} />
                               </div>
                               <div className="mt-1 flex min-w-0 items-center gap-2 whitespace-nowrap overflow-hidden">
-                                <div className="truncate text-xs text-zinc-500">{item.username ? `@${item.username}` : ''}</div>
+                                <div className="truncate text-xs text-zinc-500">{item.nickname || ''}</div>
                                 {item.tags ? (
                                   <>
                                     {item.tags.split(',').slice(0, 2).map((tag, index) => (

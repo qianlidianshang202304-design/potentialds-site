@@ -126,7 +126,7 @@ async function fetchProfile(userId: string) {
 
     const primary = await supabase
       .from('profiles')
-      .select('is_paid,browse_limit,browse_used,browse_month,search_count')
+      .select('is_paid,browse_limit,browse_used,browse_month,search_count,export_today,export_month,export_date,subscription_type')
       .eq('id', userId)
       .maybeSingle();
 
@@ -138,7 +138,7 @@ async function fetchProfile(userId: string) {
     const message = (primary.error as { message?: string }).message ?? '';
     const match = message.match(/Could not find the '([^']+)' column/);
     if (match && ['browse_limit', 'browse_used', 'browse_month'].includes(match[1])) {
-      const fallback = await supabase.from('profiles').select('is_paid,search_count').eq('id', userId).maybeSingle();
+      const fallback = await supabase.from('profiles').select('is_paid,search_count,export_today,export_month,export_date,subscription_type').eq('id', userId).maybeSingle();
       if (fallback.error) {
         setEntryState(userId, { loading: false, profile: null, error: fallback.error, updatedAt: Date.now() });
         return;
