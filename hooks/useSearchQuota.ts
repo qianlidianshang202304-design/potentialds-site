@@ -11,6 +11,10 @@ type ProfileQuotaRow = {
   browse_used?: number | null;
   browse_month?: string | null;
   search_count?: number | null;
+  export_today?: number | null;
+  export_month?: number | null;
+  export_date?: string | null;
+  subscription_type?: string | null;
 };
 
 type UseSearchQuotaResult = {
