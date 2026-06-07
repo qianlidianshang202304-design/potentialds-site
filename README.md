@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PotentialDS
 
-## Getting Started
+PotentialDS is an affordable creator-data and outreach SaaS. Its mission is to
+break information asymmetry and make practical software accessible to
+individual operators and small teams.
 
-First, run the development server:
+## Getting started
+
+Copy `.env.example` to `.env.local`, fill in the Supabase browser variables,
+then run:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+If the local environment does not allow a listening port, build the app and
+generate self-contained preview files instead:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npx next build --webpack
+npm run preview:offline
+```
 
-## Learn More
+The generated homepage, pricing page and privacy page are written to the
+adjacent `potentialds-preview` directory and do not require a server.
 
-To learn more about Next.js, take a look at the following resources:
+## Database
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Apply the migrations in `supabase/migrations` in filename order:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Creator lists, relationships, notes, imports and recommendations.
+2. Email templates, messages, tracked links and engagement events.
+3. Product analytics and abuse-risk monitoring.
 
-## Deploy on Vercel
+The database overview is [docs/DATABASE.md](docs/DATABASE.md), with the complete
+field dictionary in [docs/DATABASE-FIELDS.md](docs/DATABASE-FIELDS.md).
+The product workflow and roadmap are in
+[docs/PRODUCT-ROADMAP.md](docs/PRODUCT-ROADMAP.md).
+The production release sequence is in
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+After applying the migrations, run `supabase/verify.sql` in the SQL editor. All
+checks must return `ok = true`. With the service role configured locally, the
+same table/function smoke test is available as:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run verify:schema
+```
+
+## Server environment
+
+These values must only exist in the server/deployment environment:
+
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `TELEMETRY_HASH_SALT`
+- `RESEND_API_KEY`
+- `RESEND_WEBHOOK_SECRET` (the Resend signing secret beginning with `whsec_`)
+
+Never prefix these values with `NEXT_PUBLIC_`.
+
+## Verification
+
+```bash
+npx next build --webpack
+npm run test:core
+npx eslint app/admin app/api app/creators app/crm app/email app/my-creators \
+  components/TrafficTracker.tsx components/DatabaseSetupNotice.tsx \
+  lib/crm-types.ts lib/request-security.ts lib/supabase-server.ts
+```

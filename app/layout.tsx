@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronDown } from 'lucide-react'; // 👈 记得引入这个图标
+import { ChevronDown } from 'lucide-react';
 import HeaderUserStatus from '../components/HeaderUserStatus';
+import MobileNav from '../components/MobileNav';
+import TrafficTracker from '../components/TrafficTracker';
 import './globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'PotentialDS',
@@ -20,7 +19,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN" className="scroll-smooth">
-      <body className={`${inter.className} bg-white text-black antialiased selection:bg-blue-100 selection:text-blue-900`}>
+      <body className="bg-white text-black antialiased selection:bg-blue-100 selection:text-blue-900">
+        <TrafficTracker />
         
         {/* --- 🍎 Apple 风格全局导航栏 --- */}
         <header className="fixed top-0 w-full z-[100] bg-[#fbfbfd]/80 backdrop-blur-md border-b border-gray-200 transition-all duration-300">
@@ -37,6 +37,12 @@ export default function RootLayout({
               {/* 其他固定链接 */}
               <Link href="/creator-workbench" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
                 达人工作台
+              </Link>
+              <Link href="/my-creators" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
+                我的达人
+              </Link>
+              <Link href="/crm" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
+                CRM
               </Link>
               {/* --- ✨ 下拉菜单开始：下载中心（含全部产品） ✨ --- */}
               <div className="relative group h-full flex items-center">
@@ -82,6 +88,7 @@ export default function RootLayout({
 
             {/* 右侧搜索/功能区 */}
             <div className="flex items-center gap-4">
+              <MobileNav />
               <HeaderUserStatus />
             </div>
 

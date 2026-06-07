@@ -1,8 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-type SupabaseClient = ReturnType<typeof createClient>;
-
-let cachedClient: SupabaseClient | null = null;
+// Database types are generated after migrations are applied. Until then the
+// client stays untyped so newly introduced tables can be used during rollout.
+let cachedClient: SupabaseClient<any, 'public', any> | null = null;
 
 export function getSupabaseSafe() {
   if (cachedClient) return cachedClient;
@@ -12,7 +13,7 @@ export function getSupabaseSafe() {
 
   if (!supabaseUrl || !supabaseAnonKey) return null;
 
-  cachedClient = createClient(supabaseUrl, supabaseAnonKey);
+  cachedClient = createClient<any, 'public', any>(supabaseUrl, supabaseAnonKey);
   return cachedClient;
 }
 

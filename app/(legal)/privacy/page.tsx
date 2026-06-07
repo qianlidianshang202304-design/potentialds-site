@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <div className="space-y-6 text-sm leading-7 text-gray-700 sm:text-base">
           <p>
             本政策用于说明 PotentialDS 在提供 SaaS 服务过程中对个人信息与平台公开数据的处理方式。
-            本政策参考 2026 年主流 SaaS 合规实践，并兼顾 GDPR 与 CCPA 的核心原则。
+            本政策参考主流 SaaS 合规实践，并兼顾 GDPR 与 CCPA 的核心原则。最后更新日期：2026 年 6 月 7 日。
           </p>
 
           <div>
@@ -41,7 +41,25 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 className="mb-2 text-lg font-semibold text-gray-900">4. 数据安全与保留</h2>
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">4. 访问分析与安全监控</h2>
+            <p>
+              为了解不同流量入口的效果并识别异常抓取，我们会记录访问页面、来源域名、UTM 参数、设备类型和匿名会话标识。
+              IP 地址与浏览器特征仅以加盐哈希形式用于频率控制和风险判断，不保存原始值。访问分析数据默认保留 90 天，
+              安全事件默认保留 30 天。
+            </p>
+          </div>
+
+          <div>
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">5. 邮件互动统计</h2>
+            <p>
+              当用户通过 PotentialDS 发送商务邮件时，邮件可包含透明的 1×1 像素和经过跳转的链接，用于估算打开与点击情况。
+              图片代理、安全扫描和收件人设置可能造成统计偏差，因此产品中会将其标注为估算数据。每封邮件均提供退订入口，
+              退订后系统会阻止后续发送。
+            </p>
+          </div>
+
+          <div>
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">6. 数据安全与保留</h2>
             <p>
               我们采用行业常见的访问控制、传输加密与最小权限策略保护数据。个人信息仅在实现服务目的所需期间内保存，
               到期后按政策进行删除或匿名化处理。
@@ -49,9 +67,10 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 className="mb-2 text-lg font-semibold text-gray-900">5. 用户权利</h2>
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">7. 用户权利</h2>
             <p>
-              你可依法申请访问、更正、删除个人信息，或限制特定处理行为。如需行使相关权利，请通过平台支持渠道联系我们。
+              你可依法申请访问、更正、删除个人信息，限制特定处理行为，或撤回邮件互动统计许可。
+              如需行使相关权利，请通过平台支持渠道联系我们。
             </p>
           </div>
         </div>

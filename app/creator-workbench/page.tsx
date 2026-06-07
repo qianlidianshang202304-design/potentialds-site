@@ -1,12 +1,14 @@
 'use client';
 
 import React, { Suspense, useCallback, useEffect, useState } from 'react';
-import { Chrome, Download, Search, Youtube } from 'lucide-react';
+import { BookmarkPlus, Chrome, Download, ExternalLink, Search, Youtube } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import QuotaModal from '../../components/QuotaModal';
 import { getSupabase, incrementProfileBrowseCount } from '../../lib/supabase';
 import { useSearchQuota } from '../../hooks/useSearchQuota';
 import { useSupabaseUser } from '../../hooks/useSupabaseUser';
+import { trackProductEvent } from '../../lib/analytics-client';
 
 type Platform = 'All' | 'Instagram' | 'YouTube' | 'TikTok';
 type FollowerRange = 'any' | '0-1k' | '1k-5k' | '5k-10k' | '10k-50k' | '50k-100k' | '100k-500k' | '500k-1m' | '1m+' | 'custom';
@@ -36,6 +38,7 @@ const regionGroups: { group: string; options: { value: Region; label: string }[]
 ];
 
 type InfluencerRow = {
+  id?: string | null;
   nickname?: string | null;
   username?: string | null;
   fans_num?: number | null;
@@ -214,7 +217,7 @@ function CreatorWorkbenchInner() {
       setError(null);
 
       const supabase = getSupabase();
-      const baseColumns = ['nickname', 'username', 'fans_num', 'view_avg', 'region_zh', 'tags', 'link', 'platform', 'region'];
+      const baseColumns = ['id', 'nickname', 'username', 'fans_num', 'view_avg', 'region_zh', 'tags', 'link', 'platform', 'region'];
       const missingColumns = new Set<string>();
       const pageSize = 10;
       const effectivePage = targetPage ?? page;
@@ -259,6 +262,13 @@ function CreatorWorkbenchInner() {
           if (!error) {
             const rows = (data ?? []) as unknown as InfluencerRow[];
             setResults(rows);
+            if (shouldCount) {
+              trackProductEvent('creator_search', {
+                platform: activePlatform,
+                result_count: rows.length,
+                page: effectivePage,
+              });
+            }
             setLastFetchedAt(Date.now());
             setTotalCount(typeof count === 'number' ? count : null);
             try { if (shouldCount) await incrementProfileBrowseCount(user.id, rows.length); } catch {}
@@ -322,7 +332,7 @@ function CreatorWorkbenchInner() {
       const keyword = query.trim();
       const exportLimit = 1000;
 
-      const baseColumns = ['nickname', 'username', 'fans_num', 'view_avg', 'region_zh', 'tags', 'link', 'platform', 'region'];
+      const baseColumns = ['id', 'nickname', 'username', 'fans_num', 'view_avg', 'region_zh', 'tags', 'link', 'platform', 'region'];
       let qy = supabase.from('influencers').select(baseColumns.join(',')).limit(exportLimit);
 
       if (platformValue) qy = qy.eq('platform', platformValue);
@@ -374,6 +384,7 @@ function CreatorWorkbenchInner() {
       link.download = `influencers_${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(url);
+      trackProductEvent('csv_exported', { row_count: rows.length, platform: activePlatform });
 
       const todayKey = getTodayKey();
       const newToday = exportCount.today + 1;
@@ -551,7 +562,7 @@ function CreatorWorkbenchInner() {
                     <div className="col-span-2">粉丝</div>
                     <div className="col-span-2">均播</div>
                     <div className="col-span-2">地区</div>
-                    <div className="col-span-2 text-right">链接</div>
+                    <div className="col-span-2 text-right">操作</div>
                   </div>
 
                   {results.length === 0 ? (
@@ -599,14 +610,27 @@ function CreatorWorkbenchInner() {
                             <div className="col-span-2 min-w-0">
                               <div className="truncate text-xs text-zinc-600">{item.region_zh ?? '-'}</div>
                             </div>
-                            <div className="col-span-2 text-right">
+                            <div className="col-span-2 flex justify-end gap-1.5">
+                              {item.id ? (
+                                <Link
+                                  href={`/creators/${item.id}`}
+                                  title="查看达人详情并收藏"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition hover:border-slate-900 hover:text-slate-900"
+                                >
+                                  <BookmarkPlus size={14} />
+                                </Link>
+                              ) : null}
                               {item.link ? (
-                                <a href={item.link} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-slate-900 hover:text-slate-900">
-                                  打开
+                                <a
+                                  href={item.link}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  title="访问达人主页"
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-700 transition hover:border-slate-900 hover:text-slate-900"
+                                >
+                                  <ExternalLink size={14} />
                                 </a>
-                              ) : (
-                                <span className="text-xs text-zinc-400">-</span>
-                              )}
+                              ) : null}
                             </div>
                           </div>
                         </li>
