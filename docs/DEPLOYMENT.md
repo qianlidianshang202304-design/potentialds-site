@@ -7,7 +7,8 @@ In the Supabase SQL editor, run these files in order:
 1. `supabase/migrations/202606070001_creator_crm.sql`
 2. `supabase/migrations/202606070002_email_outreach.sql`
 3. `supabase/migrations/202606070003_traffic_monitoring.sql`
-4. `supabase/verify.sql`
+4. `supabase/migrations/202608140001_email_tasks.sql`
+5. `supabase/verify.sql`
 
 Do not continue until every verification row reports `ok = true`.
 
@@ -23,6 +24,7 @@ server-only and must never use a `NEXT_PUBLIC_` prefix:
 - `OUTREACH_FROM_EMAIL`
 - `OUTREACH_DAILY_LIMIT`
 - `RESEND_WEBHOOK_SECRET`
+- `CRON_SECRET`
 
 Set `NEXT_PUBLIC_APP_URL` to the canonical HTTPS production origin.
 
@@ -39,7 +41,13 @@ Set `NEXT_PUBLIC_APP_URL` to the canonical HTTPS production origin.
 Schedule `public.purge_expired_telemetry()` once per day using Supabase Cron or
 another trusted scheduler.
 
-## 5. Release checks
+## 5. Email task runner
+
+`vercel.json` schedules `/api/email/tasks/run` every 15 minutes. Set
+`CRON_SECRET` in Vercel so the route can verify automated task-run requests.
+Users can also send one batch manually from `/email/tasks`.
+
+## 6. Release checks
 
 ```bash
 npm run test:core
@@ -55,6 +63,6 @@ Then verify these production workflows:
 4. Import a CSV/XLSX containing a duplicate row and confirm skipped counts.
 5. Export a creator list.
 6. Create a template and send to a controlled inbox.
-7. Confirm estimated open, click and unsubscribe events.
-8. Confirm `/admin/analytics` shows entry sources and a test bot-risk event.
-
+7. Create a task from `/email/tasks`, pause/resume it and send one batch.
+8. Confirm estimated open, click and unsubscribe events.
+9. Confirm `/admin/analytics` shows entry sources and a test bot-risk event.

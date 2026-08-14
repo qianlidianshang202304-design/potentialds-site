@@ -8,7 +8,7 @@ const links = [
   { href: '/creator-workbench', label: '达人工作台' },
   { href: '/my-creators', label: '我的达人' },
   { href: '/crm', label: 'CRM' },
-  { href: '/email/templates', label: '邮件触达' },
+  { href: '/email/tasks', label: '发信任务' },
   { href: '/pricing', label: '定价' },
 ];
 

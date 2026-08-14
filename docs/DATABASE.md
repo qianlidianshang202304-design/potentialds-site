@@ -87,6 +87,16 @@ Reusable subject and body templates. Supported variables should initially be:
 Groups a template, creator list and send schedule. `daily_send_limit` protects
 sender reputation and provides a product-plan enforcement point.
 
+The task dashboard stores sender profile, recipient totals and cached delivery
+counters on each campaign so the UI can show progress without scanning the full
+event history.
+
+### `email_sending_profiles`
+
+User-facing sender preferences for the task dashboard, such as sender name,
+brand name, daily limit and enabled/paused state. Provider secrets stay in the
+server deployment environment and are not stored in this table.
+
 ### `email_messages`
 
 Immutable rendered email content and its current delivery state. Every message

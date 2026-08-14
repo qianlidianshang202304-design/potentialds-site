@@ -16,6 +16,7 @@ with expected_tables(name) as (
     ('email_events'),
     ('email_links'),
     ('email_unsubscribes'),
+    ('email_sending_profiles'),
     ('analytics_events'),
     ('security_events'),
     ('security_rate_limits'),
@@ -42,6 +43,16 @@ expected_columns(table_name, column_name) as (
     ('email_templates', 'subject_template'),
     ('email_templates', 'html_template'),
     ('email_campaigns', 'daily_send_limit'),
+    ('email_campaigns', 'sender_profile_id'),
+    ('email_campaigns', 'total_recipients'),
+    ('email_campaigns', 'sent_count'),
+    ('email_campaigns', 'opened_count'),
+    ('email_campaigns', 'next_run_at'),
+    ('email_sending_profiles', 'from_email'),
+    ('email_sending_profiles', 'sender_name'),
+    ('email_sending_profiles', 'brand_name'),
+    ('email_sending_profiles', 'daily_send_limit'),
+    ('email_sending_profiles', 'is_enabled'),
     ('email_messages', 'provider_message_id'),
     ('email_messages', 'tracking_token'),
     ('email_messages', 'open_count'),
@@ -112,7 +123,8 @@ from (
     ('email_messages_owner_read'),
     ('email_events_owner_read'),
     ('email_links_owner_read'),
-    ('email_unsubscribes_owner_read')
+    ('email_unsubscribes_owner_read'),
+    ('email_sending_profiles_owner')
 ) as expected_policies(policy_name)
 
 union all

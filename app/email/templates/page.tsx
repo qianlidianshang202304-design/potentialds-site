@@ -259,7 +259,10 @@ function EmailTemplatesInner() {
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">邮件模板与追踪</h1>
             <p className="mt-2 text-sm text-zinc-600">创建建联模板，发送后查看估算打开率、点击和回复。</p>
           </div>
-          <button type="button" onClick={resetTemplate} className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold"><Plus size={15} />新模板</button>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/email/tasks" className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"><Mail size={15} />发信任务</Link>
+            <button type="button" onClick={resetTemplate} className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold"><Plus size={15} />新模板</button>
+          </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">

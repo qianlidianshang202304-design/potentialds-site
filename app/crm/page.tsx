@@ -94,7 +94,7 @@ export default function CrmPage() {
           <div className="flex flex-wrap gap-2">
             <Link href="/my-creators" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold"><List size={15} />名单视图</Link>
             <Link href="/crm/import" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold"><Upload size={15} />批量导入</Link>
-            <Link href="/email/templates" className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"><Mail size={15} />邮件模板</Link>
+            <Link href="/email/tasks" className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"><Mail size={15} />发信任务</Link>
           </div>
         </div>
 

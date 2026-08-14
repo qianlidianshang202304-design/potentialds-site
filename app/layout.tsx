@@ -44,6 +44,9 @@ export default function RootLayout({
               <Link href="/crm" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
                 CRM
               </Link>
+              <Link href="/email/tasks" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
+                发信任务
+              </Link>
               {/* --- ✨ 下拉菜单开始：下载中心（含全部产品） ✨ --- */}
               <div className="relative group h-full flex items-center">
                 <button className="flex items-center gap-1 hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1 outline-none">

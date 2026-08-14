@@ -34,6 +34,7 @@ Apply the migrations in `supabase/migrations` in filename order:
 1. Creator lists, relationships, notes, imports and recommendations.
 2. Email templates, messages, tracked links and engagement events.
 3. Product analytics and abuse-risk monitoring.
+4. Email task dashboard sender settings and campaign counters.
 
 The database overview is [docs/DATABASE.md](docs/DATABASE.md), with the complete
 field dictionary in [docs/DATABASE-FIELDS.md](docs/DATABASE-FIELDS.md).
@@ -58,6 +59,7 @@ These values must only exist in the server/deployment environment:
 - `TELEMETRY_HASH_SALT`
 - `RESEND_API_KEY`
 - `RESEND_WEBHOOK_SECRET` (the Resend signing secret beginning with `whsec_`)
+- `CRON_SECRET`
 
 Never prefix these values with `NEXT_PUBLIC_`.
 

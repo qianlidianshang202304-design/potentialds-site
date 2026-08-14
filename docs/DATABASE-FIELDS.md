@@ -133,12 +133,42 @@ redefined by these migrations.
 | `user_id` | Owner used by RLS. |
 | `list_id` | Optional target creator list. |
 | `template_id` | Optional source template. |
+| `sender_profile_id` | Sender preferences used by the task dashboard. |
 | `name` | Campaign name. |
 | `status` | Draft-to-completion campaign state. |
 | `scheduled_at` | Planned start time. |
 | `started_at` | Actual start time. |
 | `completed_at` | Completion time. |
 | `daily_send_limit` | Sender-reputation and plan limit. |
+| `sender_name` | Sender display name snapshot for the campaign. |
+| `brand_name` | Brand name snapshot for template variables. |
+| `total_recipients` | Number of queued recipients generated for the task. |
+| `sent_count` | Cached sent-message count. |
+| `failed_count` | Cached failed-message count. |
+| `opened_count` | Cached opened-message count. |
+| `clicked_count` | Cached clicked-message count. |
+| `next_run_at` | Next automated runner time. |
+| `last_run_at` | Most recent runner time. |
+| `metadata` | Compact task metadata such as skipped recipients. |
+| `created_at` | Creation time. |
+| `updated_at` | Last modification time. |
+
+### `email_sending_profiles`
+
+| Field | Purpose |
+| --- | --- |
+| `id` | Primary sender profile ID. |
+| `user_id` | Owner used by RLS. |
+| `label` | User-facing configuration name. |
+| `provider` | Delivery provider, currently Resend. |
+| `from_email` | Verified sender email, or server default when empty. |
+| `reply_to_email` | Optional reply-to address. |
+| `sender_name` | Default sender display name. |
+| `brand_name` | Default brand name for template variables. |
+| `daily_send_limit` | Per-user daily sending limit. |
+| `is_enabled` | Enables or pauses this sender profile. |
+| `is_default` | Default profile for new tasks. |
+| `notes` | Optional internal note. |
 | `created_at` | Creation time. |
 | `updated_at` | Last modification time. |
 
