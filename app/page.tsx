@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Database, Eye, FileText, Merge, Search, QrCode } from 'lucide-react';
+import { ArrowRight, Database, Eye, FileText, Merge, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import QuotaModal from '../components/QuotaModal';
 import { useSearchQuota } from '../hooks/useSearchQuota';
@@ -36,10 +36,16 @@ const regionGroups: { group: string; options: { value: Region; label: string }[]
 ];
 
 const tools = [
-  { title: 'Leadtracking', description: '全链路采集线索数据，自动同步到团队协作流。', href: '/leadtracking', icon: Database },
-  { title: 'TT透视眼', description: '洞察达人内容表现与商品趋势，辅助选品决策。', href: '/tt-insight', icon: Eye },
-  { title: 'PDF 排版助手', description: '一键重构文档结构，让复杂内容更清晰、更专业。', href: '/pdf-pro', icon: FileText },
-  { title: 'PDF 合并工具', description: '快速合并多份文件，统一输出高质量交付文档。', href: '/pdf-merge', icon: Merge },
+  { title: 'Leadtracking', description: '低成本采集线索数据，让中小团队也能搭建自己的增长流程。', href: '/leadtracking', icon: Database },
+  { title: 'TT透视眼', description: '减少选品和达人判断的信息差，用更低门槛看懂 TikTok 数据。', href: '/tt-insight', icon: Eye },
+  { title: 'PDF 排版助手', description: '把复杂文档处理做成人人用得起的效率工具。', href: '/pdf-pro', icon: FileText },
+  { title: 'PDF 合并工具', description: '简单、稳定、低门槛地完成日常文件合并工作。', href: '/pdf-merge', icon: Merge },
+];
+
+const missionItems = [
+  { title: '打破信息差', description: '把原本昂贵、分散、难获取的数据工具，整理成更容易上手的产品。' },
+  { title: '人人用得起', description: '用免费额度和低价套餐，让个人卖家、小团队也能开始使用 SaaS 工具。' },
+  { title: '服务真实工作', description: '围绕达人建联、选品分析、办公效率这些每天会发生的任务持续打磨。' },
 ];
 
 export default function Home() {
@@ -101,17 +107,17 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-zinc-100/70 to-transparent" />
           <div className="relative">
             <p className="mb-3 text-center text-[10px] font-semibold tracking-[0.14em] text-zinc-600 uppercase sm:mb-4 sm:text-[11px]">
-              Professional Creator Marketing OS
+              Affordable SaaS Tools For Real Teams
             </p>
             <h1 className="text-center text-[clamp(1.2rem,8vw,2.5rem)] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[clamp(1.5rem,6vw,3rem)] lg:text-[clamp(1.8rem,5vw,3.8rem)]">
-              全球全平台达人数据分析 &amp; 营销平台
+              打破信息差，做大家都用得起的 SaaS 服务软件
             </h1>
-            <p className="mt-3 max-w-2xl mx-auto text-center text-xs leading-relaxed text-zinc-500 sm:mt-4 sm:text-sm lg:text-base">
-              从达人发现、数据洞察到营销执行，一站式覆盖 IG、YouTube、TikTok 的增长工作流。
+            <p className="mx-auto mt-3 max-w-2xl text-center text-xs leading-relaxed text-zinc-500 sm:mt-4 sm:text-sm lg:text-base">
+              从达人发现、数据洞察到办公效率，把原本昂贵复杂的工具做得更轻、更清楚、更适合中小团队长期使用。
             </p>
 
             <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50/70 p-3 sm:mt-8 sm:p-4 lg:p-5">
-              <div className="flex flex-wrap justify-center gap-2 mb-4 sm:mb-5">
+              <div className="mb-4 flex flex-wrap justify-center gap-2 sm:mb-5">
                 {platforms.map((platform) => {
                   const isActive = activePlatform === platform;
                   return (
@@ -120,7 +126,7 @@ export default function Home() {
                       type="button"
                       onClick={() => setActivePlatform(platform)}
                       className={`rounded-full px-4 py-2 text-xs font-medium transition-all sm:px-5 sm:py-2.5 sm:text-sm ${
-                        isActive ? platformActiveStyle(platform) : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+                        isActive ? platformActiveStyle(platform) : 'border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50'
                       }`}
                     >
                       {platform}
@@ -130,12 +136,12 @@ export default function Home() {
               </div>
 
               <div className="flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 sm:px-4 sm:py-3 shadow-sm">
-                  <div className="flex items-center gap-1.5 shrink-0 sm:border-r sm:border-zinc-200 sm:pr-3 sm:mr-3">
+                <div className="flex w-full flex-col gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm sm:flex-row sm:items-center sm:px-4 sm:py-3">
+                  <div className="flex shrink-0 items-center gap-1.5 sm:mr-3 sm:border-r sm:border-zinc-200 sm:pr-3">
                     <button
                       type="button"
                       onClick={() => setSearchMode('name')}
-                      className={`px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all sm:px-3 sm:py-1.5 sm:text-xs ${
+                      className={`rounded-full px-2.5 py-1.5 text-[10px] font-medium transition-all sm:px-3 sm:text-xs ${
                         searchMode === 'name' ? 'bg-slate-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                       }`}
                     >
@@ -144,29 +150,29 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => setSearchMode('tag')}
-                      className={`px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all sm:px-3 sm:py-1.5 sm:text-xs ${
+                      className={`rounded-full px-2.5 py-1.5 text-[10px] font-medium transition-all sm:px-3 sm:text-xs ${
                         searchMode === 'tag' ? 'bg-slate-900 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                       }`}
                     >
                       标签
                     </button>
                   </div>
-                  <div className="flex-1 flex items-center gap-2">
-                    <Search size={16} className="text-zinc-400 shrink-0" />
+                  <div className="flex flex-1 items-center gap-2">
+                    <Search size={16} className="shrink-0 text-zinc-400" />
                     <input
                       type="text"
                       aria-label={`${activePlatform} influencer search`}
-                      placeholder={searchMode === 'name' ? `搜索达人频道 / Handle` : `搜索标签 / 关键词`}
+                      placeholder={searchMode === 'name' ? '搜索达人频道 / Handle' : '搜索标签 / 关键词'}
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                      className="flex-1 bg-transparent text-xs text-slate-800 outline-none placeholder:text-zinc-400 sm:text-sm"
+                      className="min-w-0 flex-1 bg-transparent text-xs text-slate-800 outline-none placeholder:text-zinc-400 sm:text-sm"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleSearch}
-                    className={`shrink-0 inline-flex items-center justify-center rounded-full px-4 py-1.5 text-xs font-medium transition sm:px-5 sm:py-2 sm:text-sm ${actionButtonStyle()}`}
+                    className={`inline-flex shrink-0 items-center justify-center rounded-full px-4 py-1.5 text-xs font-medium transition sm:px-5 sm:py-2 sm:text-sm ${actionButtonStyle()}`}
                   >
                     搜索
                   </button>
@@ -191,7 +197,7 @@ export default function Home() {
                           placeholder="最小"
                           value={customFollowerMin}
                           onChange={(e) => setCustomFollowerMin(e.target.value)}
-                          className="h-7 w-16 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none sm:h-8 sm:w-20 sm:px-2 sm:text-xs"
+                          className="h-7 w-16 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none sm:h-8 sm:w-20 sm:text-xs"
                         />
                         <span className="text-[10px] text-zinc-400 sm:text-xs">-</span>
                         <input
@@ -199,13 +205,13 @@ export default function Home() {
                           placeholder="最大"
                           value={customFollowerMax}
                           onChange={(e) => setCustomFollowerMax(e.target.value)}
-                          className="h-7 w-16 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none sm:h-8 sm:w-20 sm:px-2 sm:text-xs"
+                          className="h-7 w-16 rounded-lg border border-zinc-200 bg-white px-2 text-[10px] text-slate-900 outline-none sm:h-8 sm:w-20 sm:text-xs"
                         />
                       </div>
                     )}
                   </div>
 
-                  <div className="h-5 w-px bg-zinc-200 hidden sm:block" />
+                  <div className="hidden h-5 w-px bg-zinc-200 sm:block" />
 
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-zinc-500 sm:text-xs">地区</span>
@@ -226,6 +232,15 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {missionItems.map((item) => (
+                <div key={item.title} className="rounded-xl border border-zinc-200 bg-white/75 px-4 py-3 text-left">
+                  <h2 className="text-sm font-semibold text-slate-900">{item.title}</h2>
+                  <p className="mt-1 text-xs leading-5 text-zinc-600">{item.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -233,26 +248,26 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-zinc-100/70 to-transparent" />
           <div className="relative">
             <div className="mb-4 sm:mb-5">
-              <p className="text-[10px] font-bold tracking-[0.14em] text-zinc-500 uppercase sm:text-[11px]">PRODUCTS & DOWNLOADS</p>
-              <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900 sm:mt-2 sm:text-lg lg:text-xl">产品系列与下载中心</h2>
-              <p className="mt-1 text-[10px] text-zinc-600 sm:mt-2 sm:text-xs lg:text-sm">在一个列表中查看全部工具，并跳转到各工具的独立介绍与下载页面。</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 sm:text-[11px]">PRODUCTS & DOWNLOADS</p>
+              <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900 sm:mt-2 lg:text-xl">产品系列与下载中心</h2>
+              <p className="mt-1 text-[10px] text-zinc-600 sm:mt-2 sm:text-xs lg:text-sm">围绕达人营销、数据分析和办公效率，持续提供低门槛、可负担的工具。</p>
             </div>
 
             <ul className="overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
               {tools.map((tool) => {
                 const Icon = tool.icon;
                 return (
-                  <li key={tool.title} className="group flex items-center justify-between border-b border-zinc-100 px-3 py-3 last:border-b-0 sm:px-4 sm:py-3 lg:px-5 lg:py-3">
+                  <li key={tool.title} className="group flex items-center justify-between border-b border-zinc-100 px-3 py-3 last:border-b-0 sm:px-4 lg:px-5">
                     <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                       <div className="inline-flex rounded-lg bg-zinc-100 p-2 text-slate-900 sm:p-1.5">
-                        <Icon style={{width: '16px', height: '16px'}} />
+                        <Icon style={{ width: '16px', height: '16px' }} />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-sm lg:text-base">{tool.title}</h3>
+                        <h3 className="truncate text-sm font-semibold text-slate-900 lg:text-base">{tool.title}</h3>
                         <p className="mt-0.5 text-[10px] leading-4 text-zinc-600 sm:mt-1 sm:text-xs lg:text-sm">{tool.description}</p>
                       </div>
                     </div>
-                    <Link href={tool.href} className="inline-flex items-center gap-1 rounded border border-zinc-300 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-900 transition hover:border-slate-900 hover:text-slate-900 sm:px-2.5 sm:py-1 sm:text-xs lg:px-3 lg:py-1.5 whitespace-nowrap">
+                    <Link href={tool.href} className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-900 transition hover:border-slate-900 sm:text-xs lg:px-3 lg:py-1.5">
                       立即使用
                       <ArrowRight size={10} />
                     </Link>
@@ -262,8 +277,6 @@ export default function Home() {
             </ul>
           </div>
         </section>
-
-
       </div>
     </main>
   );
