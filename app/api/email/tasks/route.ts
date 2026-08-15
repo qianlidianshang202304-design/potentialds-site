@@ -139,6 +139,10 @@ export async function GET(request: Request) {
       const campaignMessages = messages.filter((m) => m.campaign_id === cid);
       const opened = campaignMessages.filter((m) => (m.open_count || 0) > 0).length;
       const clicked = campaignMessages.filter((m) => (m.click_count || 0) > 0).length;
+      const rawStatus = String(campaign.status || '');
+      // 已完成/已取消/失败状态直接给 100%，避免消息状态未更新时显示 0%
+      const isDone = ['completed', 'cancelled', 'failed'].includes(rawStatus);
+      const progress = isDone ? 100 : (s.total > 0 ? Math.round(((s.sent + s.failed + s.cancelled) / s.total) * 100) : 0);
       return {
         ...campaign,
         stats: {
@@ -149,7 +153,7 @@ export async function GET(request: Request) {
           opened,
           clicked,
           openRate: s.sent > 0 ? Math.round((opened / s.sent) * 100) : 0,
-          progress: s.total > 0 ? Math.round(((s.sent + s.failed + s.cancelled) / s.total) * 100) : 0,
+          progress,
         },
       };
     });

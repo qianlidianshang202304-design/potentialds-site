@@ -22,6 +22,7 @@ import {
   Upload,
 } from 'lucide-react';
 import DatabaseSetupNotice from '../../../components/DatabaseSetupNotice';
+import LineChart, { type ChartPoint } from '../../../components/LineChart';
 import { getSupabaseSafe } from '../../../lib/supabase';
 import { useSupabaseUser } from '../../../hooks/useSupabaseUser';
 
@@ -187,6 +188,8 @@ export default function EmailTasksPage() {
   const [dateFilter, setDateFilter] = useState('');
   const [senderFilter, setSenderFilter] = useState('all');
   const [inboxFilter, setInboxFilter] = useState<string>('all');
+  const [chartStartDate, setChartStartDate] = useState('');
+  const [chartEndDate, setChartEndDate] = useState('');
   const [taskName, setTaskName] = useState('新的达人建联任务');
   const [listId, setListId] = useState('');
   const [templateId, setTemplateId] = useState('');
@@ -368,6 +371,38 @@ export default function EmailTasksPage() {
     });
     return Array.from(set).sort();
   }, [filteredMessages]);
+
+  // 折线图数据：按日期聚合发信量与打开率
+  const chartData = useMemo<ChartPoint[]>(() => {
+    const allMessages = data.recentMessages;
+    if (allMessages.length === 0) return [];
+
+    const filtered = allMessages.filter((item) => {
+      const localDate = beijingDate(item.sent_at || item.created_at);
+      if (chartStartDate && localDate < chartStartDate) return false;
+      if (chartEndDate && localDate > chartEndDate) return false;
+      return true;
+    });
+
+    const byDate = new Map<string, { sent: number; opened: number }>();
+    for (const msg of filtered) {
+      const d = beijingDate(msg.sent_at || msg.created_at);
+      if (!d) continue;
+      const cur = byDate.get(d) || { sent: 0, opened: 0 };
+      if (isSentMessage(msg.status)) cur.sent++;
+      if ((msg.open_count || 0) > 0) cur.opened++;
+      byDate.set(d, cur);
+    }
+
+    return Array.from(byDate.entries())
+      .map(([date, v]) => ({
+        date,
+        sent: v.sent,
+        opened: v.opened,
+        openRate: pct(v.opened, v.sent),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [data.recentMessages, chartStartDate, chartEndDate]);
 
   const createTask = async () => {
     setBusy(true);
@@ -592,7 +627,9 @@ export default function EmailTasksPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f5f7] text-slate-900">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 text-slate-900" style={{
+      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2393c5fd' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+    }}>
       <div className="mx-auto max-w-[1320px] px-4 pb-16 pt-10 sm:px-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -609,7 +646,7 @@ export default function EmailTasksPage() {
         {schemaMissing ? <div className="mt-5"><DatabaseSetupNotice /></div> : null}
         {message ? <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">{message}</div> : null}
 
-        <section id="mail-panel" className="mt-6 rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
+        <section id="mail-panel" className="mt-6 rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
           <div className="flex flex-col gap-4 border-b border-zinc-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2">
               <BarChart3 size={18} />
@@ -644,7 +681,7 @@ export default function EmailTasksPage() {
             ))}
           </div>
 
-          <div className="grid gap-0 xl:grid-cols-3">
+          <div className="grid gap-0 xl:grid-cols-2">
             <div className="border-b border-zinc-100 xl:border-b-0 xl:border-r">
               <div className="grid grid-cols-12 gap-3 px-5 py-3 text-xs font-semibold text-zinc-500">
                 <div className="col-span-6">发件邮箱名</div>
@@ -663,7 +700,7 @@ export default function EmailTasksPage() {
                 </div>
               ))}
             </div>
-            <div className="border-b border-zinc-100 xl:border-b-0 xl:border-r">
+            <div>
               <div className="grid grid-cols-12 gap-3 px-5 py-3 text-xs font-semibold text-zinc-500">
                 <div className="col-span-8">邮件模板</div>
                 <div className="col-span-2 text-center">发信数</div>
@@ -679,29 +716,11 @@ export default function EmailTasksPage() {
                 </div>
               ))}
             </div>
-            <div>
-              <div className="grid grid-cols-12 gap-3 px-5 py-3 text-xs font-semibold text-zinc-500">
-                <div className="col-span-6">查询收件箱</div>
-                <div className="col-span-2 text-center">发送</div>
-                <div className="col-span-2 text-center">打开</div>
-                <div className="col-span-2 text-right">打开率</div>
-              </div>
-              {inboxStats.length === 0 ? (
-                <div className="px-5 py-10 text-sm text-zinc-500">暂无收件箱数据。</div>
-              ) : inboxStats.slice(0, 8).map((item) => (
-                <div key={item.key} className="grid grid-cols-12 gap-3 border-t border-zinc-100 px-5 py-3 text-sm">
-                  <div className="col-span-6 truncate font-semibold">{item.label}</div>
-                  <div className="col-span-2 text-center">{item.sent}</div>
-                  <div className="col-span-2 text-center">{item.opened}</div>
-                  <div className="col-span-2 text-right font-semibold">{item.openRate}%</div>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
         {/* === 收件箱查询：独立区块，单独的筛选器 === */}
-        <section className="mt-5 rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
+        <section className="mt-5 rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
           <div className="flex flex-col gap-4 border-b border-zinc-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2">
               <Inbox size={18} />
@@ -767,8 +786,34 @@ export default function EmailTasksPage() {
           </div>
         </section>
 
+        {/* === 趋势折线图 === */}
+        <section className="mt-5 rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
+          <div className="flex flex-col gap-4 border-b border-zinc-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 size={18} />
+              <h2 className="text-lg font-semibold">发信趋势</h2>
+              <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">发信量 + 打开率 按日聚合</span>
+            </div>
+            <div className="flex flex-wrap gap-2 items-end">
+              <label className="flex items-center gap-2 text-xs font-semibold text-zinc-500">
+                开始日期
+                <input type="date" value={chartStartDate} onChange={(e) => setChartStartDate(e.target.value)} className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+              </label>
+              <span className="text-zinc-400">—</span>
+              <label className="flex items-center gap-2 text-xs font-semibold text-zinc-500">
+                结束日期
+                <input type="date" value={chartEndDate} onChange={(e) => setChartEndDate(e.target.value)} className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+              </label>
+              <button type="button" onClick={() => { setChartStartDate(''); setChartEndDate(''); }} className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-700">重置</button>
+            </div>
+          </div>
+          <div className="px-5 py-4">
+            <LineChart data={chartData} height={240} />
+          </div>
+        </section>
+
         <section id="task-settings" className="mt-5 grid gap-5 xl:grid-cols-[1fr_420px]">
-          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
+          <div className="overflow-hidden rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
             <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
               <div className="flex items-center gap-2">
                 <ClipboardList size={18} />
@@ -809,9 +854,9 @@ export default function EmailTasksPage() {
                   <div className="col-span-1 text-center font-semibold text-sm">{campaign.stats.queued}</div>
                   <div className="col-span-2">
                     <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">
-                      <div className="h-full rounded-full bg-slate-900" style={{ width: `${campaign.stats.progress}%` }} />
+                      <div className={`h-full rounded-full ${campaign.status === 'completed' ? 'bg-emerald-500' : 'bg-slate-900'}`} style={{ width: `${campaign.stats.progress}%` }} />
                     </div>
-                    <div className="mt-0.5 text-xs text-zinc-500">{campaign.stats.progress}%</div>
+                    <div className={`mt-0.5 text-xs ${campaign.status === 'completed' ? 'text-emerald-600 font-semibold' : 'text-zinc-500'}`}>{campaign.stats.progress}%</div>
                   </div>
                   <div className="col-span-1 text-center text-sm font-semibold">{campaign.stats.openRate}%</div>
                   <div className="col-span-3 flex items-center justify-center gap-1.5">
@@ -851,7 +896,7 @@ export default function EmailTasksPage() {
             </div>
           </div>
 
-          <aside className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-200/40">
+          <aside className="rounded-lg border border-zinc-200/60 bg-white/80 p-5 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
             <div className="flex items-center gap-2">
               <Plus size={18} />
               <h2 className="text-lg font-semibold">新增任务</h2>
@@ -931,7 +976,7 @@ export default function EmailTasksPage() {
         </section>
 
         <section id="mailbox-settings" className="mt-5 grid gap-5 xl:grid-cols-[1fr_420px]">
-          <div className="rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
+          <div className="rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
             <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
               <div className="flex items-center gap-2">
                 <Settings size={18} />
@@ -971,7 +1016,7 @@ export default function EmailTasksPage() {
                 <div className="col-span-4">目前已设置邮箱</div>
                 <div className="col-span-2">发件人</div>
                 <div className="col-span-2 text-center">每日上限</div>
-                <div className="col-span-4 text-right">启用 / 暂停 / 删除</div>
+                <div className="col-span-4 text-right">设置 / 启用 / 暂停 / 删除</div>
               </div>
               {data.profiles.length === 0 ? (
                 <div className="px-4 py-12 text-sm text-zinc-500">还没有邮箱配置。</div>
@@ -994,12 +1039,32 @@ export default function EmailTasksPage() {
                     smtpUser: profile.smtp_user || '',
                     smtpPassword: profile.smtp_password || '',
                     smtpSecure: profile.smtp_secure !== false,
-                  })} className="col-span-4 truncate text-left font-semibold text-slate-900">
+                  })} className="col-span-4 truncate text-left font-semibold text-slate-900 hover:text-blue-600 transition-colors">
                     {profile.from_email || profile.label}
                   </button>
                   <div className="col-span-2 truncate text-zinc-600">{profile.sender_name || profile.brand_name || '-'}</div>
                   <div className="col-span-2 text-center">{profile.daily_send_limit}</div>
                   <div className="col-span-4 flex justify-end gap-1.5">
+                    <button type="button" title="编辑配置" disabled={busy} onClick={() => setProfileForm({
+                      id: profile.id,
+                      label: profile.label || '默认发件配置',
+                      provider: profile.provider || 'smtp',
+                      fromEmail: profile.from_email || '',
+                      replyToEmail: profile.reply_to_email || '',
+                      senderName: profile.sender_name || '',
+                      brandName: profile.brand_name || '',
+                      dailySendLimit: profile.daily_send_limit || 50,
+                      isEnabled: profile.is_enabled !== false,
+                      isDefault: profile.is_default !== false,
+                      notes: profile.notes || '',
+                      smtpHost: profile.smtp_host || '',
+                      smtpPort: profile.smtp_port || 465,
+                      smtpUser: profile.smtp_user || '',
+                      smtpPassword: profile.smtp_password || '',
+                      smtpSecure: profile.smtp_secure !== false,
+                    })} className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 disabled:opacity-40">
+                      <Settings size={12} />
+                    </button>
                     <button type="button" disabled={busy || profile.is_enabled} onClick={() => void toggleProfile(profile, true)} className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 disabled:opacity-40">
                       启用
                     </button>
@@ -1015,7 +1080,7 @@ export default function EmailTasksPage() {
             </div>
           </div>
 
-          <aside className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-200/40">
+          <aside className="rounded-lg border border-zinc-200/60 bg-white/80 p-5 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
             <h2 className="text-lg font-semibold">配置邮箱参数</h2>
             <div className="mt-4 space-y-3">
               <label className="block text-xs font-semibold text-zinc-500">
