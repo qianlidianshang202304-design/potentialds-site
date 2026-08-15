@@ -26,7 +26,7 @@ export default function RegisterPage() {
         return;
       }
       const emailRedirectTo = `${window.location.origin}/auth/callback`;
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -35,6 +35,16 @@ export default function RegisterPage() {
         },
       });
       if (error) throw error;
+
+      // 邮箱已存在且已验证：Supabase 不会发送验证邮件，直接提示用户去登录
+      const user = data?.user;
+      if (user && user.confirmed_at) {
+        setError(
+          `邮箱 ${email} 已经注册并验证完成，请直接登录。如有密码问题可使用\"忘记密码\"功能重置。`
+        );
+        return;
+      }
+      // 邮箱已存在但未验证：正常跳转验证页，让用户重新发送邮件
       router.push(`/register/verify?email=${encodeURIComponent(email)}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

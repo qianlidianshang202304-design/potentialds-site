@@ -77,3 +77,4 @@ npx eslint app/admin app/api app/creators app/crm app/email app/my-creators \
 
 deploy-20260815v2: redeploy with fresh Git webhook connection
 deploy-20260815v3: test GitHub push auto-deploy after reconnect
+deploy-20260815v4: fix register page — detect confirmed email and prompt to login instead of misleading to verify page
