@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { ArrowLeft, FileSpreadsheet, Upload } from 'lucide-react';
+import { ArrowLeft, FileSpreadsheet, FolderPlus, Upload } from 'lucide-react';
 import DatabaseSetupNotice from '../../../components/DatabaseSetupNotice';
 import { CreatorList } from '../../../lib/crm-types';
 import { getSupabaseSafe } from '../../../lib/supabase';
@@ -46,6 +46,8 @@ export default function CrmImportPage() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [schemaMissing, setSchemaMissing] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [creatingList, setCreatingList] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -73,6 +75,32 @@ export default function CrmImportPage() {
     const parsed = XLSX.utils.sheet_to_json<RawRow>(sheet, { defval: '' });
     setRows(parsed.slice(0, 1000).map(normalizedRow));
     setResult(null);
+  };
+
+  const createList = async () => {
+    const trimmedName = newListName.trim();
+    if (!trimmedName || !user?.id) return;
+    setCreatingList(true);
+    try {
+      const supabase = getSupabaseSafe();
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from('creator_lists')
+        .insert({ user_id: user.id, name: trimmedName })
+        .select('*')
+        .single();
+      if (error) {
+        setResult(`创建名单失败：${error.message}`);
+        return;
+      }
+      const created = data as CreatorList;
+      setLists((current) => [created, ...current]);
+      setListId(created.id);
+      setNewListName('');
+      setResult(`名单「${created.name}」已创建，已选择为导入目标。`);
+    } finally {
+      setCreatingList(false);
+    }
   };
 
   const runImport = async () => {
@@ -124,13 +152,38 @@ export default function CrmImportPage() {
           {schemaMissing ? <div className="mt-5"><DatabaseSetupNotice /></div> : null}
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <label className="text-xs font-semibold text-zinc-500">
+            <div className="text-xs font-semibold text-zinc-500">
               导入到名单
-              <select value={listId} onChange={(event) => setListId(event.target.value)} className="mt-1 h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900">
-                <option value="">选择名单</option>
-                {lists.map((list) => <option key={list.id} value={list.id}>{list.name}</option>)}
-              </select>
-            </label>
+              <div className="mt-1 flex gap-2">
+                <select value={listId} onChange={(event) => setListId(event.target.value)} className="h-11 flex-1 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900">
+                  <option value="">选择名单</option>
+                  {lists.map((list) => <option key={list.id} value={list.id}>{list.name}</option>)}
+                </select>
+              </div>
+              <div className="mt-2 flex gap-2">
+                <input
+                  value={newListName}
+                  onChange={(event) => setNewListName(event.target.value)}
+                  placeholder="或创建新名单..."
+                  className="h-10 flex-1 rounded-xl border border-zinc-200 px-3 text-sm font-normal text-slate-900"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      void createList();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={!newListName.trim() || creatingList}
+                  onClick={() => void createList()}
+                  className="inline-flex h-10 items-center gap-1 rounded-xl border border-zinc-300 px-3 text-sm font-semibold text-zinc-700 disabled:opacity-50"
+                >
+                  <FolderPlus size={14} />
+                  {creatingList ? '创建中...' : '创建'}
+                </button>
+              </div>
+            </div>
             <label className="text-xs font-semibold text-zinc-500">
               文件
               <input type="file" accept=".csv,.xlsx,.xls" onChange={(event) => event.target.files?.[0] && void readFile(event.target.files[0])} className="mt-1 block h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-normal text-slate-900" />

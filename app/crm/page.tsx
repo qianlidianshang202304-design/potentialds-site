@@ -83,7 +83,7 @@ export default function CrmPage() {
   }
 
   return (
-    <main className="min-h-screen bg-transparent text-slate-900">
+    <main className="min-h-screen bg-[#f5f5f7] text-slate-900">
       <div className="mx-auto max-w-[1500px] px-4 pb-16 pt-12 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -104,17 +104,17 @@ export default function CrmPage() {
         <section className="mt-6 overflow-x-auto pb-4">
           <div className="grid min-w-[1800px] grid-cols-9 gap-3">
             {columns.map((column) => (
-              <div key={column.value} className="rounded-2xl border border-zinc-200 bg-zinc-50/90 p-3">
+              <div key={column.value} className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm shadow-zinc-200/50">
                 <div className="flex items-center justify-between px-1 py-1">
                   <h2 className="text-sm font-semibold">{column.label}</h2>
                   <span className="rounded-full bg-white px-2 py-0.5 text-xs text-zinc-500">{column.items.length}</span>
                 </div>
                 <div className="mt-3 space-y-2">
-                  {column.items.length === 0 ? <div className="rounded-xl border border-dashed border-zinc-200 px-3 py-8 text-center text-xs text-zinc-400">暂无达人</div> : null}
+                  {column.items.length === 0 ? <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 px-3 py-8 text-center text-xs text-zinc-400">暂无达人</div> : null}
                   {column.items.map((relationship) => {
                     const creator = creators[relationship.influencer_id];
                     return (
-                      <article key={relationship.id} className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
+                      <article key={relationship.id} className="rounded-lg border border-zinc-200 bg-white p-3 shadow-sm">
                         <Link href={`/creators/${relationship.influencer_id}`} className="block truncate text-sm font-semibold hover:underline">
                           {creator?.nickname || creator?.username || `达人 #${relationship.influencer_id}`}
                         </Link>
@@ -133,7 +133,7 @@ export default function CrmPage() {
           </div>
         </section>
 
-        <div className="mt-3 flex items-center justify-between rounded-2xl border border-zinc-200 bg-white/90 px-4 py-3">
+        <div className="mt-3 flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 shadow-sm shadow-zinc-200/50">
           <p className="text-sm text-zinc-600">共 {relationships.length} 个正在跟进的达人</p>
           <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-700">
             <Download size={15} />

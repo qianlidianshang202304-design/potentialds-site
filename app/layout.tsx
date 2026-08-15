@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronDown } from 'lucide-react';
 import HeaderUserStatus from '../components/HeaderUserStatus';
 import MobileNav from '../components/MobileNav';
 import TrafficTracker from '../components/TrafficTracker';
@@ -32,60 +31,15 @@ export default function RootLayout({
             </Link>
 
             {/* 中间菜单区 (Desktop) */}
-            <nav className="hidden md:flex items-center justify-center gap-6 w-full max-w-lg mx-auto h-full">
-              
-              {/* 其他固定链接 */}
-              <Link href="/creator-workbench" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
-                达人工作台
-              </Link>
+            <nav className="hidden md:flex items-center justify-center gap-8 w-full max-w-md mx-auto h-full">
               <Link href="/my-creators" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
                 我的达人
               </Link>
               <Link href="/crm" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
                 CRM
               </Link>
-              <Link href="/email/tasks" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
+              <Link href="/email/tasks" className="rounded-full bg-black px-3 py-1.5 text-white shadow-sm transition-all hover:bg-zinc-800">
                 发信任务
-              </Link>
-              {/* --- ✨ 下拉菜单开始：下载中心（含全部产品） ✨ --- */}
-              <div className="relative group h-full flex items-center">
-                <button className="flex items-center gap-1 hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1 outline-none">
-                  下载中心
-                  <ChevronDown size={10} className="opacity-50 group-hover:opacity-100 transition-opacity" />
-                </button>
-
-                {/* 下拉面板 (悬停显示) */}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform group-hover:translate-y-0 translate-y-2">
-                    <div className="bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-xl shadow-xl p-1.5 w-72 flex flex-col gap-0.5 ring-1 ring-black/5">
-                         <p className="px-3 pt-2 pb-1 text-[10px] font-semibold tracking-[0.12em] text-gray-400 uppercase">
-                           达人建联类
-                         </p>
-                         <Link href="/leadtracking" className="block px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
-                           <p className="text-[12px] text-gray-800 font-medium">Leadtracking</p>
-                           <p className="text-[11px] text-gray-500">全链路线索采集与同步，提升团队转化效率。</p>
-                         </Link>
-                         <Link href="/tt-insight" className="block px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
-                           <p className="text-[12px] text-gray-800 font-medium">TT透视眼</p>
-                           <p className="text-[11px] text-gray-500">洞察达人内容表现与商品趋势，辅助选品决策。</p>
-                         </Link>
-                         <div className="my-1 h-px bg-gray-200" />
-                         <p className="px-3 pt-1 pb-1 text-[10px] font-semibold tracking-[0.12em] text-gray-400 uppercase">
-                           办公软件类
-                         </p>
-                         <Link href="/pdf-pro" className="block px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
-                           <p className="text-[12px] text-gray-800 font-medium">PDF排版助手</p>
-                           <p className="text-[11px] text-gray-500">一键优化文档结构与版式，交付更专业。</p>
-                         </Link>
-                         <Link href="/pdf-merge" className="block px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors">
-                           <p className="text-[12px] text-gray-800 font-medium">PDF合并工具</p>
-                           <p className="text-[11px] text-gray-500">快速合并多份文档，统一输出高质量文件。</p>
-                         </Link>
-                    </div>
-                </div>
-              </div>
-              {/* --- 下拉菜单结束 --- */}
-              <Link href="/pricing" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
-                定价
               </Link>
             </nav>
 

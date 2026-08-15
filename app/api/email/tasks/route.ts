@@ -14,6 +14,7 @@ type MessageRow = {
   status: string;
   open_count: number | null;
   click_count: number | null;
+  sender_email: string | null;
   recipient_email: string;
   recipient_name: string | null;
   subject: string;
@@ -47,13 +48,14 @@ export async function GET(request: Request) {
     const { data: authData, error: authError } = await admin.auth.getUser(token);
     if (authError || !authData.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const [campaignResult, profileResult, templateResult, listResult, messageResult] = await Promise.all([
+    // 并行查询：campaigns + profiles + templates + lists + 最近50条消息 + 按campaign聚合统计
+    const [campaignResult, profileResult, templateResult, listResult, messageResult, statsResult] = await Promise.all([
       admin
         .from('email_campaigns')
-        .select('*')
+        .select('id,name,status,scheduled_at,started_at,completed_at,next_run_at,last_run_at,daily_send_limit,sender_profile_id,sender_name,brand_name,total_recipients,sent_count,failed_count,opened_count,clicked_count,created_at,updated_at,list_id,template_id')
         .eq('user_id', authData.user.id)
         .order('created_at', { ascending: false })
-        .limit(100),
+        .limit(50),
       admin
         .from('email_sending_profiles')
         .select('*')
@@ -71,29 +73,66 @@ export async function GET(request: Request) {
         .select('id,name,updated_at')
         .eq('user_id', authData.user.id)
         .order('updated_at', { ascending: false }),
+      // 只拉最近 50 条消息用于展示，不再拉 1000 条做 JS 统计
       admin
         .from('email_messages')
-        .select('id,campaign_id,status,open_count,click_count,recipient_email,recipient_name,subject,sent_at,created_at')
+        .select('id,campaign_id,status,open_count,click_count,sender_email,recipient_email,recipient_name,subject,sent_at,created_at')
         .eq('user_id', authData.user.id)
         .order('created_at', { ascending: false })
-        .limit(1000),
+        .limit(50),
+      // 用数据库 count 查询获取每个 campaign 的实时统计（比拉全量消息在 JS 中算快得多）
+      admin
+        .from('email_messages')
+        .select('campaign_id,status')
+        .eq('user_id', authData.user.id)
+        .in('status', ['queued', 'sending', 'sent', 'failed', 'cancelled']),
     ]);
 
-    const firstError = campaignResult.error || profileResult.error || templateResult.error || listResult.error || messageResult.error;
+    const firstError = campaignResult.error || profileResult.error || templateResult.error || listResult.error || messageResult.error || statsResult.error;
     if (firstError) return NextResponse.json({ error: firstError.message }, { status: 500 });
 
+    // 在 JS 中按 campaign_id + status 聚合统计（只处理状态字段，数据量远小于拉全量字段）
+    const statsMap = new Map<string, { queued: number; sent: number; failed: number; cancelled: number; total: number }>();
+    for (const row of (statsResult.data || []) as Array<{ campaign_id: string | null; status: string }>) {
+      const cid = row.campaign_id || '_none';
+      const s = statsMap.get(cid) || { queued: 0, sent: 0, failed: 0, cancelled: 0, total: 0 };
+      s.total++;
+      if (row.status === 'queued') s.queued++;
+      else if (row.status === 'sent') s.sent++;
+      else if (row.status === 'failed') s.failed++;
+      else if (row.status === 'cancelled') s.cancelled++;
+      statsMap.set(cid, s);
+    }
+
     const messages = ((messageResult.data || []) as MessageRow[]);
-    const campaigns = ((campaignResult.data || []) as Array<Record<string, unknown>>).map((campaign) => ({
-      ...campaign,
-      stats: campaignStats(messages, String(campaign.id)),
-    }));
+    const campaigns = ((campaignResult.data || []) as Array<Record<string, unknown>>).map((campaign) => {
+      const cid = String(campaign.id);
+      const s = statsMap.get(cid) || { queued: 0, sent: 0, failed: 0, cancelled: 0, total: 0 };
+      // 从最近消息中计算打开/点击数（近似值，campaign 表本身也有 opened_count/clicked_count 字段）
+      const campaignMessages = messages.filter((m) => m.campaign_id === cid);
+      const opened = campaignMessages.filter((m) => (m.open_count || 0) > 0).length;
+      const clicked = campaignMessages.filter((m) => (m.click_count || 0) > 0).length;
+      return {
+        ...campaign,
+        stats: {
+          queued: s.queued,
+          sent: s.sent,
+          failed: s.failed,
+          cancelled: s.cancelled,
+          opened,
+          clicked,
+          openRate: s.sent > 0 ? Math.round((opened / s.sent) * 100) : 0,
+          progress: s.total > 0 ? Math.round(((s.sent + s.failed + s.cancelled) / s.total) * 100) : 0,
+        },
+      };
+    });
 
     return NextResponse.json({
       campaigns,
       profiles: profileResult.data || [],
       templates: templateResult.data || [],
       lists: listResult.data || [],
-      recentMessages: messages.slice(0, 200),
+      recentMessages: messages,
     });
   } catch (error) {
     return NextResponse.json(
@@ -247,6 +286,60 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Task create failed' },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const admin = getSupabaseAdmin();
+    const { data: authData, error: authError } = await admin.auth.getUser(token);
+    if (authError || !authData.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { searchParams } = new URL(request.url);
+    const specificId = searchParams.get('id');
+
+    if (specificId) {
+      const existing = await admin
+        .from('email_campaigns')
+        .select('id')
+        .eq('id', specificId)
+        .eq('user_id', authData.user.id)
+        .maybeSingle();
+      if (existing.error || !existing.data) return NextResponse.json({ error: '任务不存在。' }, { status: 404 });
+
+      await admin.from('email_events').delete().eq('user_id', authData.user.id).eq('campaign_id', specificId);
+      await admin.from('email_messages').delete().eq('user_id', authData.user.id).eq('campaign_id', specificId);
+      await admin.from('email_campaigns').delete().eq('id', specificId).eq('user_id', authData.user.id);
+      return NextResponse.json({ deleted: 1 });
+    }
+
+    const deletableStatuses = ['completed', 'cancelled', 'failed'];
+    const { data: campaignList, error: listError } = await admin
+      .from('email_campaigns')
+      .select('id')
+      .eq('user_id', authData.user.id)
+      .in('status', deletableStatuses);
+    if (listError) return NextResponse.json({ error: listError.message }, { status: 500 });
+
+    const ids = (campaignList || []).map((row) => row.id);
+    if (ids.length === 0) return NextResponse.json({ deleted: 0 });
+
+    await admin.from('email_events').delete().eq('user_id', authData.user.id).in('campaign_id', ids);
+    await admin.from('email_messages').delete().eq('user_id', authData.user.id).in('campaign_id', ids);
+    const { count } = await admin
+      .from('email_campaigns')
+      .delete({ count: 'exact' })
+      .eq('user_id', authData.user.id)
+      .in('id', ids);
+    return NextResponse.json({ deleted: count || 0 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Delete failed' },
       { status: 500 },
     );
   }
