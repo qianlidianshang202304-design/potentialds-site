@@ -72,3 +72,7 @@ npx eslint app/admin app/api app/creators app/crm app/email app/my-creators \
   components/TrafficTracker.tsx components/DatabaseSetupNotice.tsx \
   lib/crm-types.ts lib/request-security.ts lib/supabase-server.ts
 ```
+
+---
+
+deploy-20260815: email task dashboard, auth callback, tracking pixel routes
