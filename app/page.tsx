@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Database, Eye, FileText, Merge, Search } from 'lucide-react';
+import { ArrowRight, Database, Eye, FileText, Merge, Search, Subtitles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import QuotaModal from '../components/QuotaModal';
 import { useSearchQuota } from '../hooks/useSearchQuota';
@@ -35,9 +35,13 @@ const regionGroups: { group: string; options: { value: Region; label: string }[]
   { group: '欧洲', options: [{ value: 'uk', label: '英国' }, { value: 'de', label: '德国' }, { value: 'fr', label: '法国' }] },
 ];
 
-const tools = [
+const creatorTools = [
   { title: 'Leadtracking', description: '低成本采集线索数据，让中小团队也能搭建自己的增长流程。', href: '/leadtracking', icon: Database },
   { title: 'TT透视眼', description: '减少选品和达人判断的信息差，用更低门槛看懂 TikTok 数据。', href: '/tt-insight', icon: Eye },
+  { title: 'TikTok 达人精灵·字幕', description: '在 TikTok 视频页自动生成中文字幕，本地 whisper 离线转写，保护隐私。', href: '/tt-subtitle', icon: Subtitles },
+];
+
+const officeTools = [
   { title: 'PDF 排版助手', description: '把复杂文档处理做成人人用得起的效率工具。', href: '/pdf-pro', icon: FileText },
   { title: 'PDF 合并工具', description: '简单、稳定、低门槛地完成日常文件合并工作。', href: '/pdf-merge', icon: Merge },
 ];
@@ -240,28 +244,65 @@ export default function Home() {
               <p className="mt-1 text-[10px] text-zinc-600 sm:mt-2 sm:text-xs lg:text-sm">围绕达人营销、数据分析和办公效率，持续提供低门槛、可负担的工具。</p>
             </div>
 
-            <ul className="overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
-              {tools.map((tool) => {
-                const Icon = tool.icon;
-                return (
-                  <li key={tool.title} className="group flex items-center justify-between border-b border-zinc-100 px-3 py-3 last:border-b-0 sm:px-4 lg:px-5">
-                    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                      <div className="inline-flex rounded-lg bg-zinc-100 p-2 text-slate-900 sm:p-1.5">
-                        <Icon style={{ width: '16px', height: '16px' }} />
+            {/* 达人营销工具 */}
+            <div className="mb-4">
+              <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 sm:text-sm">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                达人营销工具
+              </h3>
+              <ul className="overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
+                {creatorTools.map((tool) => {
+                  const Icon = tool.icon;
+                  return (
+                    <li key={tool.title} className="group flex items-center justify-between border-b border-zinc-100 px-3 py-3 last:border-b-0 sm:px-4 lg:px-5">
+                      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                        <div className="inline-flex rounded-lg bg-indigo-50 p-2 text-indigo-700 sm:p-1.5">
+                          <Icon style={{ width: '16px', height: '16px' }} />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="truncate text-sm font-semibold text-slate-900 lg:text-base">{tool.title}</h3>
+                          <p className="mt-0.5 text-[10px] leading-4 text-zinc-600 sm:mt-1 sm:text-xs lg:text-sm">{tool.description}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <h3 className="truncate text-sm font-semibold text-slate-900 lg:text-base">{tool.title}</h3>
-                        <p className="mt-0.5 text-[10px] leading-4 text-zinc-600 sm:mt-1 sm:text-xs lg:text-sm">{tool.description}</p>
+                      <Link href={tool.href} className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-indigo-200 bg-white px-2.5 py-1 text-[10px] font-medium text-indigo-700 transition hover:border-indigo-600 hover:text-indigo-700 sm:text-xs lg:px-3 lg:py-1.5">
+                        立即使用
+                        <ArrowRight size={10} />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
+            {/* 办公效率工具 */}
+            <div>
+              <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-600 sm:text-sm">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                办公效率工具
+              </h3>
+              <ul className="overflow-hidden rounded-2xl border border-zinc-200 bg-white/90 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)]">
+                {officeTools.map((tool) => {
+                  const Icon = tool.icon;
+                  return (
+                    <li key={tool.title} className="group flex items-center justify-between border-b border-zinc-100 px-3 py-3 last:border-b-0 sm:px-4 lg:px-5">
+                      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                        <div className="inline-flex rounded-lg bg-emerald-50 p-2 text-emerald-700 sm:p-1.5">
+                          <Icon style={{ width: '16px', height: '16px' }} />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="truncate text-sm font-semibold text-slate-900 lg:text-base">{tool.title}</h3>
+                          <p className="mt-0.5 text-[10px] leading-4 text-zinc-600 sm:mt-1 sm:text-xs lg:text-sm">{tool.description}</p>
+                        </div>
                       </div>
-                    </div>
-                    <Link href={tool.href} className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-zinc-300 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-900 transition hover:border-slate-900 sm:text-xs lg:px-3 lg:py-1.5">
-                      立即使用
-                      <ArrowRight size={10} />
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+                      <Link href={tool.href} className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-emerald-200 bg-white px-2.5 py-1 text-[10px] font-medium text-emerald-700 transition hover:border-emerald-600 hover:text-emerald-700 sm:text-xs lg:px-3 lg:py-1.5">
+                        立即使用
+                        <ArrowRight size={10} />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
         </section>
       </div>
