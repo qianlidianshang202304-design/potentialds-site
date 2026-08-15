@@ -98,13 +98,16 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-sky-50 text-slate-900" style={{
-      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23818cf8' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+    <main className="min-h-screen text-slate-900" style={{
+      backgroundImage: `url(/images/site-bg.webp)`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
     }}>
       <QuotaModal open={quotaModalOpen} title="额度已用完" message={quotaMessage} onClose={() => setQuotaModalOpen(false)} />
       <div className="mx-auto max-w-6xl px-4 pb-14 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
-        <section className="relative overflow-hidden rounded-2xl border border-zinc-200/60 bg-white/85 px-4 py-8 shadow-[0_24px_50px_-36px_rgba(99,102,241,0.25)] backdrop-blur-xl sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-indigo-50/60 via-sky-50/40 to-transparent" />
+        <section className="relative overflow-hidden rounded-2xl border border-zinc-200/60 bg-white/80 px-4 py-8 shadow-[0_24px_50px_-36px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/60 to-transparent" />
           <div className="relative">
             <p className="mb-3 text-center text-[10px] font-semibold tracking-[0.14em] text-zinc-600 uppercase sm:mb-4 sm:text-[11px]">
               Affordable SaaS Tools For Real Teams
@@ -235,8 +238,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="relative mt-8 overflow-hidden rounded-2xl border border-zinc-200/60 bg-white/85 p-3 shadow-[0_14px_36px_-30px_rgba(99,102,241,0.35)] backdrop-blur-xl sm:mt-10 sm:p-4 lg:p-5">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-sky-50/50 to-transparent" />
+        <section className="relative mt-8 overflow-hidden rounded-2xl border border-zinc-200/60 bg-white/80 p-3 shadow-[0_14px_36px_-30px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:mt-10 sm:p-4 lg:p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/50 to-transparent" />
           <div className="relative">
             <div className="mb-4 sm:mb-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 sm:text-[11px]">PRODUCTS & DOWNLOADS</p>
