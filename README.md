@@ -76,3 +76,4 @@ npx eslint app/admin app/api app/creators app/crm app/email app/my-creators \
 ---
 
 deploy-20260815v2: redeploy with fresh Git webhook connection
+deploy-20260815v3: test GitHub push auto-deploy after reconnect
