@@ -150,25 +150,27 @@ export default function MyCreatorsPage() {
   return (
     <main className="min-h-screen bg-transparent text-slate-900">
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-12 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">My Creators</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">我的达人名单</h1>
-            <p className="mt-2 text-sm text-zinc-600">收藏、分组、导出并持续跟进达人。</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/crm/import" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold">
-              <Upload size={15} />
-              批量导入
-            </Link>
-            <Link href="/crm" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold">
-              <LayoutDashboard size={15} />
-              CRM 看板
-            </Link>
-            <button type="button" onClick={exportCsv} disabled={visibleRows.length === 0} className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
-              <Download size={15} />
-              导出
-            </button>
+        <div className="mb-6 rounded-2xl border border-zinc-200/60 bg-white/80 p-5 shadow-sm backdrop-blur-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">My Creators</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight">我的达人名单</h1>
+              <p className="mt-2 text-sm text-zinc-600">收藏、分组、导出并持续跟进达人。</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/crm/import" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold">
+                <Upload size={15} />
+                批量导入
+              </Link>
+              <Link href="/crm" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold">
+                <LayoutDashboard size={15} />
+                CRM 看板
+              </Link>
+              <button type="button" onClick={exportCsv} disabled={visibleRows.length === 0} className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                <Download size={15} />
+                导出
+              </button>
+            </div>
           </div>
         </div>
 

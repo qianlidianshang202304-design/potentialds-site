@@ -83,18 +83,20 @@ export default function CrmPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f5f7] text-slate-900">
+    <main className="min-h-screen bg-transparent text-slate-900">
       <div className="mx-auto max-w-[1500px] px-4 pb-16 pt-12 sm:px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Creator CRM</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">达人建联看板</h1>
-            <p className="mt-2 text-sm text-zinc-600">从待联系到已合作，集中查看每个达人当前进度。</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/my-creators" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold"><List size={15} />名单视图</Link>
-            <Link href="/crm/import" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold"><Upload size={15} />批量导入</Link>
-            <Link href="/email/tasks" className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"><Mail size={15} />发信任务</Link>
+        <div className="mb-6 rounded-2xl border border-zinc-200/60 bg-white/80 p-5 shadow-sm backdrop-blur-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Creator CRM</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight">达人建联看板</h1>
+              <p className="mt-2 text-sm text-zinc-600">从待联系到已合作，集中查看每个达人当前进度。</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/my-creators" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold"><List size={15} />名单视图</Link>
+              <Link href="/crm/import" className="inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold"><Upload size={15} />批量导入</Link>
+              <Link href="/email/tasks" className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white"><Mail size={15} />发信任务</Link>
+            </div>
           </div>
         </div>
 

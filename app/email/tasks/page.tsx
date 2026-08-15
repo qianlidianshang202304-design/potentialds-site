@@ -632,20 +632,20 @@ export default function EmailTasksPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 text-slate-900" style={{
-      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2393c5fd' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-    }}>
+    <main className="min-h-screen bg-transparent text-slate-900">
       <div className="mx-auto max-w-[1320px] px-4 pb-16 pt-10 sm:px-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Email Operation</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">发信任务面板</h1>
-            <p className="mt-2 text-sm text-zinc-600">邮件面板、任务设置和邮箱设置统一在这一页。</p>
-          </div>
+        <div className="mb-6 rounded-2xl border border-zinc-200/60 bg-white/80 p-5 shadow-sm backdrop-blur-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Email Operation</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight">发信任务面板</h1>
+              <p className="mt-2 text-sm text-zinc-600">邮件面板、任务设置和邮箱设置统一在这一页。</p>
+            </div>
           <button type="button" onClick={() => void loadData()} className="inline-flex items-center gap-2 self-start rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold lg:self-auto">
             <RefreshCw size={15} />
             刷新
           </button>
+        </div>
         </div>
 
         {schemaMissing ? <div className="mt-5"><DatabaseSetupNotice /></div> : null}

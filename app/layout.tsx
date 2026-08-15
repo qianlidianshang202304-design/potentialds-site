@@ -19,13 +19,30 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN" className="scroll-smooth">
-      <body className="bg-white text-black antialiased selection:bg-blue-100 selection:text-blue-900">
+      <body
+        className="min-h-screen text-black antialiased selection:bg-blue-100 selection:text-blue-900"
+        style={{
+          backgroundImage: `url(/images/site-bg.webp)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+        }}
+      >
+        {/* 全局叠加细点十字底纹（让涂鸦背景之上再加一层细腻纹理） */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.18'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            mixBlendMode: 'overlay',
+          }}
+        />
         <TrafficTracker />
-        
+
         {/* --- 🍎 Apple 风格全局导航栏 --- */}
-        <header className="fixed top-0 w-full z-[100] bg-[#fbfbfd]/80 backdrop-blur-md border-b border-gray-200 transition-all duration-300">
+        <header className="fixed top-0 w-full z-[100] bg-[#fbfbfd]/75 backdrop-blur-xl border-b border-white/40 transition-all duration-300">
           <div className="max-w-[1024px] mx-auto px-4 h-11 flex items-center justify-between text-[12px] font-normal text-gray-700">
-            
+
             {/* 1. Logo / Home */}
             <Link href="/" className="hover:opacity-60 transition-opacity p-2">
               <span className="font-semibold text-black text-sm tracking-tight">PotentialDS</span>
@@ -48,13 +65,13 @@ export default function RootLayout({
         </header>
 
         {/* --- 页面主体 --- */}
-        <main className="pt-11 min-h-screen">
+        <main className="pt-11 min-h-screen relative z-10">
           {children}
         </main>
 
         {/* --- 全局 Footer --- */}
-        <footer className="bg-[#f5f5f7] py-16 text-[12px] text-gray-500" id="contact">
-          <div className="max-w-[1024px] mx-auto px-6 border-t border-gray-200 pt-8">
+        <footer className="relative z-10 bg-white/70 backdrop-blur-xl py-16 text-[12px] text-gray-600" id="contact">
+          <div className="max-w-[1024px] mx-auto px-6 border-t border-white/40 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-start gap-8">
               
               {/* 左侧 */}
