@@ -79,6 +79,8 @@ type Campaign = {
 
 type RecentMessage = {
   campaign_id: string | null;
+  template_id: string | null;
+  template_name: string | null;
   status: string;
   open_count: number | null;
   click_count: number | null;
@@ -141,6 +143,20 @@ function shortDate(value: string | null) {
   return value ? new Date(value).toLocaleDateString('zh-CN') : '-';
 }
 
+// 把 UTC ISO 时间戳转换为"北京时间（UTC+8）的 YYYY-MM-DD"字符串
+// 用于解决：Supabase 存 UTC，直接 slice(0,10) 会有跨日偏差
+function beijingDate(value: string | null | undefined): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  // UTC + 8 小时
+  const beijing = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+  const y = beijing.getUTCFullYear();
+  const m = (beijing.getUTCMonth() + 1).toString().padStart(2, '0');
+  const d = beijing.getUTCDate().toString().padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function groupMailStats<T extends string>(
   rows: RecentMessage[],
   keyFor: (row: RecentMessage) => T,
@@ -170,6 +186,7 @@ export default function EmailTasksPage() {
   const [testing, setTesting] = useState(false);
   const [dateFilter, setDateFilter] = useState('');
   const [senderFilter, setSenderFilter] = useState('all');
+  const [inboxFilter, setInboxFilter] = useState<string>('all');
   const [taskName, setTaskName] = useState('新的达人建联任务');
   const [listId, setListId] = useState('');
   const [templateId, setTemplateId] = useState('');
@@ -315,26 +332,42 @@ export default function EmailTasksPage() {
   }, [data.profiles, data.recentMessages]);
 
   const filteredMessages = useMemo(() => data.recentMessages.filter((item) => {
-    const dateOk = !dateFilter || (item.sent_at || item.created_at).slice(0, 10) === dateFilter;
+    const localDate = beijingDate(item.sent_at || item.created_at);
+    const dateOk = !dateFilter || localDate === dateFilter;
     const senderOk = senderFilter === 'all' || item.sender_email === senderFilter;
     return dateOk && senderOk;
   }), [data.recentMessages, dateFilter, senderFilter]);
+
+  // 收件箱统计独立筛选：用全量消息在日期+发件箱基础上再叠加收件人筛选
+  const inboxFilteredMessages = useMemo(() => filteredMessages.filter((item) => {
+    if (inboxFilter === 'all') return true;
+    return item.recipient_email === inboxFilter;
+  }), [filteredMessages, inboxFilter]);
 
   const senderStats = useMemo(() => groupMailStats(
     filteredMessages,
     (row) => (row.sender_email || '服务器默认') as string,
   ), [filteredMessages]);
 
-  const subjectStats = useMemo(() => groupMailStats(
+  // 模板统计（"邮件标题"改为"邮件模板"：按 template_id 聚合，没 template 的回退到标题）
+  const templateStats = useMemo(() => groupMailStats(
     filteredMessages,
-    (row) => row.subject || '未命名邮件',
+    (row) => (row.template_name ? `📧 ${row.template_name}` : `📄 ${row.subject || '未命名邮件'}`) as string,
   ), [filteredMessages]);
 
   const inboxStats = useMemo(() => groupMailStats(
-    filteredMessages,
+    inboxFilteredMessages,
     (row) => row.recipient_email,
     (email) => email,
-  ), [filteredMessages]);
+  ), [inboxFilteredMessages]);
+
+  const inboxOptions = useMemo(() => {
+    const set = new Set<string>();
+    filteredMessages.forEach((row) => {
+      if (row.recipient_email) set.add(row.recipient_email);
+    });
+    return Array.from(set).sort();
+  }, [filteredMessages]);
 
   const createTask = async () => {
     setBusy(true);
@@ -632,13 +665,13 @@ export default function EmailTasksPage() {
             </div>
             <div className="border-b border-zinc-100 xl:border-b-0 xl:border-r">
               <div className="grid grid-cols-12 gap-3 px-5 py-3 text-xs font-semibold text-zinc-500">
-                <div className="col-span-8">邮件标题</div>
+                <div className="col-span-8">邮件模板</div>
                 <div className="col-span-2 text-center">发信数</div>
                 <div className="col-span-2 text-right">打开率</div>
               </div>
-              {subjectStats.length === 0 ? (
-                <div className="px-5 py-10 text-sm text-zinc-500">暂无邮件标题数据。</div>
-              ) : subjectStats.slice(0, 8).map((item) => (
+              {templateStats.length === 0 ? (
+                <div className="px-5 py-10 text-sm text-zinc-500">暂无邮件模板数据。</div>
+              ) : templateStats.slice(0, 8).map((item: { key: string; label: string; sent: number; openRate: number }) => (
                 <div key={item.key} className="grid grid-cols-12 gap-3 border-t border-zinc-100 px-5 py-3 text-sm">
                   <div className="col-span-8 truncate font-semibold">{item.label}</div>
                   <div className="col-span-2 text-center">{item.sent}</div>
@@ -647,14 +680,11 @@ export default function EmailTasksPage() {
               ))}
             </div>
             <div>
-              <div className="flex items-center justify-between px-5 py-3">
-                <div className="grid grid-cols-12 gap-3 w-full text-xs font-semibold text-zinc-500">
-                  <div className="col-span-6">查询收件箱</div>
-                  <div className="col-span-2 text-center">发送</div>
-                  <div className="col-span-2 text-center">打开</div>
-                  <div className="col-span-2 text-right">打开率</div>
-                </div>
-                <Inbox size={15} className="hidden shrink-0 text-zinc-400 xl:ml-2 xl:block" />
+              <div className="grid grid-cols-12 gap-3 px-5 py-3 text-xs font-semibold text-zinc-500">
+                <div className="col-span-6">查询收件箱</div>
+                <div className="col-span-2 text-center">发送</div>
+                <div className="col-span-2 text-center">打开</div>
+                <div className="col-span-2 text-right">打开率</div>
               </div>
               {inboxStats.length === 0 ? (
                 <div className="px-5 py-10 text-sm text-zinc-500">暂无收件箱数据。</div>
@@ -667,6 +697,73 @@ export default function EmailTasksPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* === 收件箱查询：独立区块，单独的筛选器 === */}
+        <section className="mt-5 rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
+          <div className="flex flex-col gap-4 border-b border-zinc-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-2">
+              <Inbox size={18} />
+              <h2 className="text-lg font-semibold">收件箱查询</h2>
+              <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-600">打开率按单个收件邮箱单独统计</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <label className="flex items-center gap-2 text-xs font-semibold text-zinc-500">
+                时间筛选器
+                <input type="date" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+              </label>
+              <label className="flex items-center gap-2 text-xs font-semibold text-zinc-500">
+                发信邮箱筛选器
+                <select value={senderFilter} onChange={(event) => setSenderFilter(event.target.value)} className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900">
+                  <option value="all">全部邮箱</option>
+                  {senderOptions.map((email) => <option key={email} value={email}>{email}</option>)}
+                </select>
+              </label>
+              <label className="flex items-center gap-2 text-xs font-semibold text-zinc-500">
+                收件箱筛选器
+                <select value={inboxFilter} onChange={(event) => setInboxFilter(event.target.value)} className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900 min-w-[220px]">
+                  <option value="all">全部收件邮箱</option>
+                  {inboxOptions.map((email) => <option key={email} value={email}>{email}</option>)}
+                </select>
+              </label>
+            </div>
+          </div>
+          <div className="grid border-b border-zinc-100 sm:grid-cols-4">
+            {[
+              ['发件箱', senderFilter === 'all' ? '全部' : senderFilter],
+              ['收件箱', inboxFilter === 'all' ? '全部' : inboxFilter],
+              ['发送总数', inboxStats.reduce((s, i) => s + i.sent, 0)],
+              ['总打开率', `${pct(inboxStats.reduce((s, i) => s + i.opened, 0), inboxStats.reduce((s, i) => s + i.sent, 0))}%`],
+            ].map(([label, value]) => (
+              <div key={label} className="border-b border-zinc-100 px-5 py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+                <div className="text-xs font-semibold text-zinc-500">{label}</div>
+                <div className="mt-2 truncate text-2xl font-semibold">{value}</div>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-12 gap-3 px-5 py-3 text-xs font-semibold text-zinc-500">
+            <div className="col-span-5">收件邮箱</div>
+            <div className="col-span-2 text-center">发送</div>
+            <div className="col-span-2 text-center">打开</div>
+            <div className="col-span-3 text-right">打开率</div>
+          </div>
+          <div className="divide-y divide-zinc-100">
+            {inboxStats.length === 0 ? (
+              <div className="px-5 py-10 text-sm text-zinc-500">暂无收件箱数据。</div>
+            ) : inboxStats.map((item) => (
+              <div key={item.key} className="grid grid-cols-12 gap-3 px-5 py-3 text-sm">
+                <div className="col-span-5 truncate font-semibold">{item.label}</div>
+                <div className="col-span-2 text-center tabular-nums">{item.sent}</div>
+                <div className="col-span-2 text-center tabular-nums">{item.opened}</div>
+                <div className="col-span-3 text-right font-semibold tabular-nums">
+                  {item.openRate}%
+                  <div className="mt-1 h-1 overflow-hidden rounded-full bg-zinc-100">
+                    <div className="h-full rounded-full bg-slate-900" style={{ width: `${item.openRate}%` }} />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 

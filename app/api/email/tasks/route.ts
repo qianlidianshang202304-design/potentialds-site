@@ -10,7 +10,9 @@ import { getSupabaseAdmin } from '../../../../lib/supabase-server';
 export const maxDuration = 300;
 
 type MessageRow = {
+  id?: string;
   campaign_id: string | null;
+  template_id: string | null;
   status: string;
   open_count: number | null;
   click_count: number | null;
@@ -20,6 +22,7 @@ type MessageRow = {
   subject: string;
   sent_at: string | null;
   created_at: string;
+  template_name?: string | null;
 };
 
 function campaignStats(messages: MessageRow[], campaignId: string) {
@@ -73,13 +76,13 @@ export async function GET(request: Request) {
         .select('id,name,updated_at')
         .eq('user_id', authData.user.id)
         .order('updated_at', { ascending: false }),
-      // 只拉最近 50 条消息用于展示，不再拉 1000 条做 JS 统计
+      // 只拉最近 200 条消息用于展示和统计（含 template_id）
       admin
         .from('email_messages')
-        .select('id,campaign_id,status,open_count,click_count,sender_email,recipient_email,recipient_name,subject,sent_at,created_at')
+        .select('id,campaign_id,template_id,status,open_count,click_count,sender_email,recipient_email,recipient_name,subject,sent_at,created_at')
         .eq('user_id', authData.user.id)
         .order('created_at', { ascending: false })
-        .limit(50),
+        .limit(200),
       // 用数据库 count 查询获取每个 campaign 的实时统计（比拉全量消息在 JS 中算快得多）
       admin
         .from('email_messages')
@@ -105,6 +108,30 @@ export async function GET(request: Request) {
     }
 
     const messages = ((messageResult.data || []) as MessageRow[]);
+
+    // 构造模板映射：campaign.template_id + templateResult 数据共同匹配 template_id
+    const templateById = new Map<string, string>();
+    for (const t of (templateResult.data || []) as Array<{ id: string; name: string }>) {
+      templateById.set(String(t.id), t.name);
+    }
+    const campaignTemplateMap = new Map<string, string | null>();
+    for (const campaign of (campaignResult.data || []) as Array<{ id: unknown; template_id?: unknown }>) {
+      if (campaign.template_id) {
+        campaignTemplateMap.set(String(campaign.id), String(campaign.template_id));
+      }
+    }
+    // 为每条消息补上 template_id（campaign 回退）与 template_name
+    const templateName = (tid: string | null): string | null => {
+      if (!tid) return null;
+      return templateById.get(tid) ?? null;
+    };
+    for (const msg of messages) {
+      if (!msg.template_id && msg.campaign_id) {
+        msg.template_id = campaignTemplateMap.get(msg.campaign_id) ?? null;
+      }
+      msg.template_name = templateName(msg.template_id);
+    }
+
     const campaigns = ((campaignResult.data || []) as Array<Record<string, unknown>>).map((campaign) => {
       const cid = String(campaign.id);
       const s = statsMap.get(cid) || { queued: 0, sent: 0, failed: 0, cancelled: 0, total: 0 };
