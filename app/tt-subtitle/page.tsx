@@ -29,6 +29,16 @@ export default function TTSubtitlePage() {
           </a>
         </div>
         <p className="mt-4 text-xs text-zinc-400">适用于 Chrome / Edge 扩展 + 本地音轨服务（首次安装需联网）</p>
+
+        {/* ZIP 内含说明 */}
+        <div className="mx-auto mt-8 max-w-xl rounded-2xl border border-indigo-100 bg-indigo-50/60 px-5 py-4 text-left text-xs leading-6 text-indigo-900/80 sm:text-sm">
+          <p className="mb-1.5 font-semibold text-indigo-700">📦 ZIP 包内已包含</p>
+          <ul className="space-y-1 pl-4">
+            <li>• <code className="rounded bg-white/60 px-1.5 py-0.5 font-mono text-[11px]">安装插件与音轨服务.app</code>：双击一键注册本机服务</li>
+            <li>• <code className="rounded bg-white/60 px-1.5 py-0.5 font-mono text-[11px]">卖家精灵/</code>：Chrome 扩展程序目录</li>
+            <li>• 已移除本机缓存、Python 虚拟环境和 Whisper 模型（首次安装会自动下载）</li>
+          </ul>
+        </div>
       </section>
 
       <section className="pb-20">
