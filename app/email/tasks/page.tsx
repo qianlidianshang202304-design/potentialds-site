@@ -308,21 +308,6 @@ export default function EmailTasksPage() {
     if (!userLoading) void loadData();
   }, [loadData, userLoading]);
 
-  const summary = useMemo(() => {
-    const sent = data.campaigns.reduce((sum, item) => sum + item.stats.sent, 0);
-    const opened = data.campaigns.reduce((sum, item) => sum + item.stats.opened, 0);
-    const queued = data.campaigns.reduce((sum, item) => sum + item.stats.queued, 0);
-    const activeTasks = data.campaigns.filter((item) => ['scheduled', 'sending'].includes(item.status)).length;
-    return {
-      sent,
-      opened,
-      queued,
-      activeTasks,
-      senderCount: data.profiles.filter((item) => item.is_enabled).length,
-      openRate: pct(opened, sent),
-    };
-  }, [data.campaigns, data.profiles]);
-
   const senderOptions = useMemo(() => {
     const emails = new Set<string>();
     data.profiles.forEach((profile) => {
@@ -340,6 +325,26 @@ export default function EmailTasksPage() {
     const senderOk = senderFilter === 'all' || item.sender_email === senderFilter;
     return dateOk && senderOk;
   }), [data.recentMessages, dateFilter, senderFilter]);
+
+  const summary = useMemo(() => {
+    const sent = filteredMessages.reduce((sum, item) => sum + (isSentMessage(item.status) ? 1 : 0), 0);
+    const opened = filteredMessages.reduce((sum, item) => sum + ((item.open_count || 0) > 0 ? 1 : 0), 0);
+    const queued = data.campaigns.reduce((sum, item) => sum + item.stats.queued, 0);
+    const activeTasks = data.campaigns.filter((item) => ['scheduled', 'sending'].includes(item.status)).length;
+    const uniqueSenders = new Set<string>();
+    filteredMessages.forEach((m) => { if (m.sender_email) uniqueSenders.add(m.sender_email); });
+    const senderCount = senderFilter === 'all'
+      ? data.profiles.filter((item) => item.is_enabled).length
+      : uniqueSenders.size || 1;
+    return {
+      sent,
+      opened,
+      queued,
+      activeTasks,
+      senderCount,
+      openRate: pct(opened, sent),
+    };
+  }, [filteredMessages, data.campaigns, data.profiles, senderFilter]);
 
   // 收件箱统计独立筛选：用全量消息在日期+发件箱基础上再叠加收件人筛选
   const inboxFilteredMessages = useMemo(() => filteredMessages.filter((item) => {

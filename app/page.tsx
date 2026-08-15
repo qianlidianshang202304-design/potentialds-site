@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Database, Eye, FileText, Merge, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -40,12 +40,6 @@ const tools = [
   { title: 'TT透视眼', description: '减少选品和达人判断的信息差，用更低门槛看懂 TikTok 数据。', href: '/tt-insight', icon: Eye },
   { title: 'PDF 排版助手', description: '把复杂文档处理做成人人用得起的效率工具。', href: '/pdf-pro', icon: FileText },
   { title: 'PDF 合并工具', description: '简单、稳定、低门槛地完成日常文件合并工作。', href: '/pdf-merge', icon: Merge },
-];
-
-const missionItems = [
-  { title: '打破信息差', description: '把原本昂贵、分散、难获取的数据工具，整理成更容易上手的产品。' },
-  { title: '人人用得起', description: '用免费额度和低价套餐，让个人卖家、小团队也能开始使用 SaaS 工具。' },
-  { title: '服务真实工作', description: '围绕达人建联、选品分析、办公效率这些每天会发生的任务持续打磨。' },
 ];
 
 export default function Home() {
@@ -100,11 +94,13 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-transparent text-slate-900">
+    <main className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-sky-50 text-slate-900" style={{
+      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23818cf8' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+    }}>
       <QuotaModal open={quotaModalOpen} title="额度已用完" message={quotaMessage} onClose={() => setQuotaModalOpen(false)} />
       <div className="mx-auto max-w-6xl px-4 pb-14 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
-        <section className="relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 px-4 py-8 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.25)] backdrop-blur-xl sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-zinc-100/70 to-transparent" />
+        <section className="relative overflow-hidden rounded-2xl border border-zinc-200/60 bg-white/85 px-4 py-8 shadow-[0_24px_50px_-36px_rgba(99,102,241,0.25)] backdrop-blur-xl sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-indigo-50/60 via-sky-50/40 to-transparent" />
           <div className="relative">
             <p className="mb-3 text-center text-[10px] font-semibold tracking-[0.14em] text-zinc-600 uppercase sm:mb-4 sm:text-[11px]">
               Affordable SaaS Tools For Real Teams
@@ -232,20 +228,11 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {missionItems.map((item) => (
-                <div key={item.title} className="rounded-xl border border-zinc-200 bg-white/75 px-4 py-3 text-left">
-                  <h2 className="text-sm font-semibold text-slate-900">{item.title}</h2>
-                  <p className="mt-1 text-xs leading-5 text-zinc-600">{item.description}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
-        <section className="relative mt-8 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 p-3 shadow-[0_14px_36px_-30px_rgba(15,23,42,0.35)] sm:mt-10 sm:p-4 lg:p-5">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-zinc-100/70 to-transparent" />
+        <section className="relative mt-8 overflow-hidden rounded-2xl border border-zinc-200/60 bg-white/85 p-3 shadow-[0_14px_36px_-30px_rgba(99,102,241,0.35)] backdrop-blur-xl sm:mt-10 sm:p-4 lg:p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-sky-50/50 to-transparent" />
           <div className="relative">
             <div className="mb-4 sm:mb-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 sm:text-[11px]">PRODUCTS & DOWNLOADS</p>

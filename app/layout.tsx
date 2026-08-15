@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import HeaderUserStatus from '../components/HeaderUserStatus';
 import MobileNav from '../components/MobileNav';
+import NavLink from '../components/NavLink';
 import TrafficTracker from '../components/TrafficTracker';
 import './globals.css';
 
@@ -32,15 +33,9 @@ export default function RootLayout({
 
             {/* 中间菜单区 (Desktop) */}
             <nav className="hidden md:flex items-center justify-center gap-8 w-full max-w-md mx-auto h-full">
-              <Link href="/my-creators" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
-                我的达人
-              </Link>
-              <Link href="/crm" className="hover:text-black hover:opacity-100 opacity-80 transition-all px-2 py-1">
-                CRM
-              </Link>
-              <Link href="/email/tasks" className="rounded-full bg-black px-3 py-1.5 text-white shadow-sm transition-all hover:bg-zinc-800">
-                发信任务
-              </Link>
+              <NavLink href="/my-creators">我的达人</NavLink>
+              <NavLink href="/crm">CRM</NavLink>
+              <NavLink href="/email/tasks" activeVariant="pill">发信任务</NavLink>
             </nav>
 
             {/* 右侧搜索/功能区 */}
