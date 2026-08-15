@@ -195,27 +195,47 @@ function AuthCallbackInner() {
     return () => { cancelled = true; };
   }, [firstToken, router]);
 
-  // 手动 OTP 验证
+  // 手动 OTP 验证（走自托管 OTP API，用 6 位数字验证码）
   const handleOtpVerify = async () => {
     if (!otpEmail || !otpCode) return;
     setOtpLoading(true);
     setOtpError(null);
     try {
       const supabase = getSupabaseSafe();
-      if (!supabase) {
-        setOtpError('系统配置错误');
-        return;
+      const res = await fetch('/api/auth/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail, code: otpCode, purpose: 'signup_confirm' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `验证失败 (HTTP ${res.status})`);
       }
-      const res = await supabase.auth.verifyOtp({ email: otpEmail, token: otpCode, type: 'signup' });
-      if (res.error) throw res.error;
-      const user = res.data?.user;
-      if (user) {
-        await ensureProfile(user.id);
-        await updateOwnProfile({ userId: user.id, email: user.email ?? null });
+
+      // 如果后端返回了 session，优先 setSession 实现自动登录
+      if (data.session?.access_token && data.session?.refresh_token && supabase) {
+        const setRes = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+        if (!setRes.error) {
+          const user = setRes.data?.user;
+          if (user) {
+            await ensureProfile(user.id);
+            await updateOwnProfile({ userId: user.id, email: user.email ?? null });
+          }
+          setStatus('success');
+          setMessage(data.message || '邮箱验证成功，正在进入首页…');
+          setTimeout(() => router.push('/'), 1000);
+          return;
+        }
       }
+
+      // 无 session 或 setSession 失败：按后端返回的 redirectTo 跳转
       setStatus('success');
-      setMessage('邮箱验证成功，正在进入首页…');
-      setTimeout(() => router.push('/'), 1000);
+      setMessage(data.message || '邮箱验证成功，正在前往登录页…');
+      const redirect = data.redirectTo || '/login';
+      setTimeout(() => router.push(redirect), 1000);
     } catch (e) {
       setOtpError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -223,19 +243,36 @@ function AuthCallbackInner() {
     }
   };
 
-  // 重新发送验证码
+  // 重新发送验证码：调用自托管 API，用你已配置的 SMTP 发 6 位纯数字验证码
   const handleResend = async () => {
     if (!otpEmail) return;
     setOtpLoading(true);
     setOtpError(null);
     try {
-      const supabase = getSupabaseSafe();
-      if (!supabase) return;
-      const res = await supabase.auth.resend({ email: otpEmail, type: 'signup' });
-      if (res.error) throw res.error;
-      setOtpError(null);
-      setMessage(`验证邮件已重新发送到 ${otpEmail}，请查收并输入 6 位验证码。`);
+      const res = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: otpEmail, purpose: 'signup_confirm' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `重新发送失败 (HTTP ${res.status})`);
+      }
+      setMessage(data.message || `验证码邮件已重新发送到 ${otpEmail}，请查收并输入 6 位验证码。`);
+      setOtpError(data.hint ? `注意：${data.hint}` : null);
     } catch (e) {
+      // 若自托管 OTP API 不可用，降级到 Supabase 原生 resend（仍会尝试，避免彻底卡死）
+      try {
+        const supabase = getSupabaseSafe();
+        if (supabase) {
+          const fallback = await supabase.auth.resend({ email: otpEmail, type: 'signup' });
+          if (fallback.error) throw fallback.error;
+          setMessage(
+            `已通过备用渠道重新发送验证邮件到 ${otpEmail}（可能因 QQ 邮箱屏蔽而无法送达）。若仍收不到，请联系管理员。`,
+          );
+          return;
+        }
+      } catch {}
       setOtpError(e instanceof Error ? e.message : String(e));
     } finally {
       setOtpLoading(false);

@@ -51,16 +51,39 @@ function RegisterVerifyInner() {
         setLoading(false);
         return;
       }
-      const { error } = await supabase.auth.resend({ type: 'signup', email });
-      if (error) throw error;
-      setHint('已重新发送验证邮件，请检查收件箱与垃圾邮件。');
+      // 优先走自托管 OTP：通过已配置的 SMTP（飞书/企业邮箱）发送 6 位数字验证码
+      const res = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, purpose: 'signup_confirm' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        // 自托管 API 失败：降级回 Supabase 原生
+        throw new Error(data.error || `发送失败 (HTTP ${res.status})`);
+      }
+      setHint(
+        `${data.message || '已重新发送验证码。'}${data.hint ? `\n\n注意：${data.hint}` : ''}`
+      );
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      if (message.toLowerCase().includes('rate limit')) {
+      if (message.toLowerCase().includes('rate limit') || message.toLowerCase().includes('频繁')) {
         setCooldownUntil(Date.now() + 5 * 60 * 1000);
         setError('发送过于频繁，已触发邮件限流。请等待一段时间后再试。');
         return;
       }
+      // 降级到 Supabase 原生 resend（仍会尝试发送链接式邮件，但 QQ 邮箱可能收不到）
+      try {
+        const supabase = getSupabaseSafe();
+        if (supabase) {
+          const fb = await supabase.auth.resend({ type: 'signup', email });
+          if (fb.error) throw fb.error;
+          setHint(
+            '已通过备用渠道重新发送验证邮件。\n注意：QQ/163 邮箱可能会屏蔽默认发件人导致收不到邮件。\n建议请联系管理员确认 SMTP 已正确配置。',
+          );
+          return;
+        }
+      } catch {}
       setError(message);
     } finally {
       setLoading(false);
