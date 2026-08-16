@@ -113,7 +113,7 @@ export default function Home() {
               Affordable SaaS Tools For Real Teams
             </p>
             <h1 className="text-center text-[clamp(1.2rem,8vw,2.5rem)] font-semibold leading-tight tracking-tight text-slate-900 sm:text-[clamp(1.5rem,6vw,3rem)] lg:text-[clamp(1.8rem,5vw,3.8rem)]">
-              打破信息差，做大家都用得起的 SaaS 服务软件
+              做大家都用得起的 SaaS 服务软件
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-center text-xs leading-relaxed text-zinc-500 sm:mt-4 sm:text-sm lg:text-base">
               从达人发现、数据洞察到办公效率，把原本昂贵复杂的工具做得更轻、更清楚、更适合中小团队长期使用。
