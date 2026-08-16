@@ -8,26 +8,24 @@ export const metadata: Metadata = {
 
 export default function LeadtrackingPage() {
   return (
-    <div className="bg-transparent">
+    <div className="bg-white">
       <section className="mx-auto max-w-4xl px-6 pb-20 pt-32 text-center">
-        <div className="rounded-3xl border border-zinc-200/60 bg-white/85 px-6 py-12 shadow-[0_24px_50px_-36px_rgba(0,0,0,0.25)] backdrop-blur-xl">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Affordable Lead SaaS</p>
-          <h1 className="mb-6 text-5xl font-bold tracking-tighter md:text-7xl">
-            线索采集，<span className="text-blue-600">不该只属于大团队。</span>
-          </h1>
-          <p className="mx-auto mb-10 max-w-2xl text-xl leading-8 text-gray-500">
-            Leadtracking 帮助中小团队降低数据采集和线索整理门槛，用更低成本搭建自己的达人建联流程。
-          </p>
+        <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Affordable Lead SaaS</p>
+        <h1 className="mb-6 text-5xl font-bold tracking-tighter md:text-7xl">
+          线索采集，<span className="text-blue-600">不该只属于大团队。</span>
+        </h1>
+        <p className="mx-auto mb-10 max-w-2xl text-xl leading-8 text-gray-500">
+          Leadtracking 帮助中小团队降低数据采集和线索整理门槛，用更低成本搭建自己的达人建联流程。
+        </p>
 
-          <a href="/leadtracking-v1.0.zip" download className="group relative inline-flex items-center gap-3 rounded-full bg-blue-600 px-10 py-4 text-lg font-medium text-white shadow-xl shadow-blue-200 transition-all hover:bg-blue-700">
-            <Download size={20} />
-            <span>下载插件 (.zip)</span>
-          </a>
-          <p className="mt-3 text-xs text-gray-400">适用于 Chrome / Edge (需开发者模式)</p>
-        </div>
+        <a href="/leadtracking-v1.0.zip" download className="group relative inline-flex items-center gap-3 rounded-full bg-blue-600 px-10 py-4 text-lg font-medium text-white shadow-xl shadow-blue-200 transition-all hover:bg-blue-700">
+          <Download size={20} />
+          <span>下载插件 (.zip)</span>
+        </a>
+        <p className="mt-3 text-xs text-gray-400">适用于 Chrome / Edge (需开发者模式)</p>
       </section>
 
-      <section className="pb-20">
+      <section className="bg-gray-50 py-20">
         <div className="mx-auto max-w-5xl px-6">
           <div className="grid gap-8 md:grid-cols-3">
             {[
@@ -35,7 +33,7 @@ export default function LeadtrackingPage() {
               { icon: Database, title: '沉淀数据资产', desc: '把零散线索整理成可跟进的数据，方便后续分配、复盘和协作。' },
               { icon: Layout, title: '服务真实流程', desc: '围绕达人 BD、选品、运营每天会用到的工作场景持续优化。' },
             ].map((item, i) => (
-              <div key={i} className="rounded-3xl border border-zinc-200/60 bg-white/85 p-8 shadow-sm backdrop-blur-sm">
+              <div key={i} className="rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
                 <item.icon className="mb-4 text-blue-600" size={32} />
                 <h3 className="mb-2 text-lg font-bold">{item.title}</h3>
                 <p className="text-sm leading-6 text-gray-500">{item.desc}</p>

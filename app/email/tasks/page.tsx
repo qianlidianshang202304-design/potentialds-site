@@ -214,6 +214,7 @@ export default function EmailTasksPage() {
   });
   const [newListName, setNewListName] = useState('');
   const [creatingList, setCreatingList] = useState(false);
+  const [expandedProfileId, setExpandedProfileId] = useState<string | null>(null);
 
   const authFetch = useCallback(async (url: string, init: RequestInit = {}) => {
     const supabase = getSupabaseSafe();
@@ -491,9 +492,18 @@ export default function EmailTasksPage() {
       if (!response.ok) throw new Error(json.error || '发件配置保存失败');
       if (json.profile?.id) {
         setProfileForm((current) => ({ ...current, id: json.profile.id }));
+        const profile = json.profile as SenderProfile;
+        setData((current) => {
+          const exists = current.profiles.some((p) => p.id === profile.id);
+          return {
+            ...current,
+            profiles: exists
+              ? current.profiles.map((p) => p.id === profile.id ? profile : p)
+              : [...current.profiles, profile],
+          };
+        });
       }
       setMessage('发件配置已保存。');
-      await loadData();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '发件配置保存失败');
     } finally {
@@ -546,7 +556,12 @@ export default function EmailTasksPage() {
       const json = await response.json();
       if (!response.ok) throw new Error(json.error || '邮箱状态更新失败');
       setMessage(isEnabled ? '邮箱已启用。' : '邮箱已暂停。');
-      await loadData();
+      setData((current) => ({
+        ...current,
+        profiles: current.profiles.map((p) =>
+          p.id === profile.id ? { ...p, is_enabled: isEnabled } : p
+        ),
+      }));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '邮箱状态更新失败');
     } finally {
@@ -610,7 +625,10 @@ export default function EmailTasksPage() {
         });
       }
       setMessage('邮箱配置已删除。');
-      await loadData();
+      setData((current) => ({
+        ...current,
+        profiles: current.profiles.filter((p) => p.id !== profileId),
+      }));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '删除失败');
     } finally {
@@ -632,26 +650,24 @@ export default function EmailTasksPage() {
   }
 
   return (
-    <main className="min-h-screen bg-transparent text-slate-900">
+    <main className="min-h-screen bg-[#f5f5f7] text-slate-900">
       <div className="mx-auto max-w-[1320px] px-4 pb-16 pt-10 sm:px-6">
-        <div className="mb-6 rounded-2xl border border-zinc-200/60 bg-white/80 p-5 shadow-sm backdrop-blur-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Email Operation</p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">发信任务面板</h1>
-              <p className="mt-2 text-sm text-zinc-600">邮件面板、任务设置和邮箱设置统一在这一页。</p>
-            </div>
+        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">Email Operation</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight">发信任务面板</h1>
+            <p className="mt-2 text-sm text-zinc-600">邮件面板、任务设置和邮箱设置统一在这一页。</p>
+          </div>
           <button type="button" onClick={() => void loadData()} className="inline-flex items-center gap-2 self-start rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold lg:self-auto">
             <RefreshCw size={15} />
             刷新
           </button>
         </div>
-        </div>
 
         {schemaMissing ? <div className="mt-5"><DatabaseSetupNotice /></div> : null}
         {message ? <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">{message}</div> : null}
 
-        <section id="mail-panel" className="mt-6 rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
+        <section id="mail-panel" className="mt-6 rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
           <div className="flex flex-col gap-4 border-b border-zinc-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2">
               <BarChart3 size={18} />
@@ -725,7 +741,7 @@ export default function EmailTasksPage() {
         </section>
 
         {/* === 收件箱查询：独立区块，单独的筛选器 === */}
-        <section className="mt-5 rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
+        <section className="mt-5 rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
           <div className="flex flex-col gap-4 border-b border-zinc-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2">
               <Inbox size={18} />
@@ -792,7 +808,7 @@ export default function EmailTasksPage() {
         </section>
 
         {/* === 趋势折线图 === */}
-        <section className="mt-5 rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
+        <section className="mt-5 rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
           <div className="flex flex-col gap-4 border-b border-zinc-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-2">
               <BarChart3 size={18} />
@@ -817,8 +833,295 @@ export default function EmailTasksPage() {
           </div>
         </section>
 
+        <section id="mailbox-settings" className="mt-5">
+          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
+            <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
+              <div className="flex items-center gap-2">
+                <Settings size={18} />
+                <h2 className="text-lg font-semibold">邮箱设置</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  formInitialized.current = true;
+                  setProfileForm({
+                    id: '',
+                    label: '默认发件配置',
+                    provider: 'smtp',
+                    fromEmail: '',
+                    replyToEmail: '',
+                    senderName: '',
+                    brandName: '',
+                    dailySendLimit: 50,
+                    isEnabled: true,
+                    isDefault: false,
+                    notes: '',
+                    smtpHost: '',
+                    smtpPort: 465,
+                    smtpUser: '',
+                    smtpPassword: '',
+                    smtpSecure: true,
+                  });
+                  setExpandedProfileId('new');
+                }}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-700"
+              >
+                <Plus size={13} />
+                新建配置
+              </button>
+            </div>
+
+            {data.profiles.length === 0 && expandedProfileId !== 'new' ? (
+              <div className="px-4 py-12 text-sm text-zinc-500">还没有邮箱配置。点击右上角"新建配置"添加。</div>
+            ) : (
+              <div className="divide-y divide-zinc-100">
+                {data.profiles.map((profile) => {
+                  const isExpanded = expandedProfileId === profile.id;
+                  const fillForm = () => setProfileForm({
+                    id: profile.id,
+                    label: profile.label || '默认发件配置',
+                    provider: profile.provider || 'smtp',
+                    fromEmail: profile.from_email || '',
+                    replyToEmail: profile.reply_to_email || '',
+                    senderName: profile.sender_name || '',
+                    brandName: profile.brand_name || '',
+                    dailySendLimit: profile.daily_send_limit || 50,
+                    isEnabled: profile.is_enabled !== false,
+                    isDefault: profile.is_default !== false,
+                    notes: profile.notes || '',
+                    smtpHost: profile.smtp_host || '',
+                    smtpPort: profile.smtp_port || 465,
+                    smtpUser: profile.smtp_user || '',
+                    smtpPassword: profile.smtp_password || '',
+                    smtpSecure: profile.smtp_secure !== false,
+                  });
+                  return (
+                  <div key={profile.id}>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isExpanded) { setExpandedProfileId(null); }
+                          else { fillForm(); setExpandedProfileId(profile.id); }
+                        }}
+                        className="flex items-center gap-2 truncate text-left font-semibold text-slate-900 hover:text-blue-600 transition-colors"
+                      >
+                        <span className="text-xs text-zinc-400">{isExpanded ? '▼' : '▶'}</span>
+                        {profile.from_email || profile.label}
+                        {profile.is_enabled ? (
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">启用</span>
+                        ) : (
+                          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-semibold text-zinc-500">暂停</span>
+                        )}
+                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-zinc-500">{profile.sender_name || profile.brand_name || '-'}</span>
+                        <span className="text-zinc-300">|</span>
+                        <span className="text-xs text-zinc-500">每日上限: {profile.daily_send_limit}</span>
+                        <button type="button" disabled={busy || profile.is_enabled} onClick={() => void toggleProfile(profile, true)} className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 disabled:opacity-40">
+                          启用
+                        </button>
+                        <button type="button" disabled={busy || !profile.is_enabled} onClick={() => void toggleProfile(profile, false)} className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700 disabled:opacity-40">
+                          暂停
+                        </button>
+                        <button type="button" disabled={busy} onClick={() => void deleteProfile(profile.id)} className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 disabled:opacity-40" title="删除邮箱配置">
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="border-t border-zinc-100 bg-zinc-50/50 px-4 py-4">
+                        <div className="space-y-3">
+                          <label className="block text-xs font-semibold text-zinc-500">
+                            配置名称
+                            <input value={profileForm.label} onChange={(event) => setProfileForm((current) => ({ ...current, label: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                          </label>
+                          <label className="block text-xs font-semibold text-zinc-500">
+                            发信箱
+                            <input value={profileForm.fromEmail} onChange={(event) => setProfileForm((current) => ({ ...current, fromEmail: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                          </label>
+                          <label className="block text-xs font-semibold text-zinc-500">
+                            回复邮箱
+                            <input value={profileForm.replyToEmail} onChange={(event) => setProfileForm((current) => ({ ...current, replyToEmail: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                          </label>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="block text-xs font-semibold text-zinc-500">
+                              发件人
+                              <input value={profileForm.senderName} onChange={(event) => setProfileForm((current) => ({ ...current, senderName: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                            </label>
+                            <label className="block text-xs font-semibold text-zinc-500">
+                              品牌
+                              <input value={profileForm.brandName} onChange={(event) => setProfileForm((current) => ({ ...current, brandName: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                            </label>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="block text-xs font-semibold text-zinc-500">
+                              发信方式
+                              <select value={profileForm.provider} onChange={(event) => setProfileForm((current) => ({ ...current, provider: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900">
+                                <option value="smtp">SMTP（邮箱账号）</option>
+                                <option value="resend">Resend（API）</option>
+                              </select>
+                            </label>
+                            <label className="block text-xs font-semibold text-zinc-500">
+                              每日上限
+                              <input type="number" min={1} max={1000} value={profileForm.dailySendLimit} onChange={(event) => setProfileForm((current) => ({ ...current, dailySendLimit: Number(event.target.value) }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                            </label>
+                          </div>
+                          {profileForm.provider === 'smtp' ? (
+                            <>
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                <label className="block text-xs font-semibold text-zinc-500">
+                                  SMTP 服务器地址
+                                  <input value={profileForm.smtpHost} onChange={(event) => setProfileForm((current) => ({ ...current, smtpHost: event.target.value }))} placeholder="smtp.qq.com" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                                </label>
+                                <label className="block text-xs font-semibold text-zinc-500">
+                                  端口
+                                  <input type="number" min={1} max={65535} value={profileForm.smtpPort} onChange={(event) => setProfileForm((current) => ({ ...current, smtpPort: Number(event.target.value) }))} placeholder="465" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                                </label>
+                              </div>
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                <label className="block text-xs font-semibold text-zinc-500">
+                                  SMTP 用户名（邮箱）
+                                  <input value={profileForm.smtpUser} onChange={(event) => setProfileForm((current) => ({ ...current, smtpUser: event.target.value }))} placeholder="you@example.com" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                                </label>
+                                <label className="block text-xs font-semibold text-zinc-500">
+                                  授权码
+                                  <input type="password" value={profileForm.smtpPassword} onChange={(event) => setProfileForm((current) => ({ ...current, smtpPassword: event.target.value }))} placeholder="邮箱授权码" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                                </label>
+                              </div>
+                              <label className="flex items-center gap-2 text-xs text-zinc-600">
+                                <input type="checkbox" checked={profileForm.smtpSecure} onChange={(event) => setProfileForm((current) => ({ ...current, smtpSecure: event.target.checked }))} className="h-4 w-4 rounded border-zinc-300" />
+                                使用 SSL/TLS 安全连接（推荐开启，端口 465）
+                              </label>
+                            </>
+                          ) : (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                              Resend 需要在服务器环境变量中配置 <code className="rounded bg-amber-100 px-1">RESEND_API_KEY</code>。请在 <code>.env.local</code> 中添加。
+                            </div>
+                          )}
+                          <button type="button" onClick={() => setProfileForm((current) => ({ ...current, isEnabled: !current.isEnabled }))} className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold ${profileForm.isEnabled ? 'bg-emerald-600 text-white' : 'border border-zinc-300 bg-white text-zinc-700'}`}>
+                            <Power size={15} />
+                            {profileForm.isEnabled ? '启用中' : '已暂停'}
+                          </button>
+                          <div className="grid grid-cols-3 gap-2">
+                            <button type="button" disabled={busy} onClick={saveProfile} className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                              保存
+                            </button>
+                            <button type="button" disabled={busy || testing || !profileForm.fromEmail} onClick={testProfile} className="inline-flex items-center justify-center gap-1.5 rounded-full border border-blue-300 bg-blue-50 px-5 py-2.5 text-sm font-semibold text-blue-700 disabled:opacity-50">
+                              <Send size={13} />
+                              {testing ? '测试中...' : '测试发送'}
+                            </button>
+                            <button type="button" disabled={busy} onClick={() => setExpandedProfileId(null)} className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 disabled:opacity-50">
+                              收起
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  );
+                })}
+
+                {expandedProfileId === 'new' && (
+                  <div className="border-t border-zinc-100 bg-zinc-50/50 px-4 py-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Plus size={16} />
+                      <span className="text-sm font-semibold">新建邮箱配置</span>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="block text-xs font-semibold text-zinc-500">
+                        配置名称
+                        <input value={profileForm.label} onChange={(event) => setProfileForm((current) => ({ ...current, label: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                      </label>
+                      <label className="block text-xs font-semibold text-zinc-500">
+                        发信箱
+                        <input value={profileForm.fromEmail} onChange={(event) => setProfileForm((current) => ({ ...current, fromEmail: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                      </label>
+                      <label className="block text-xs font-semibold text-zinc-500">
+                        回复邮箱
+                        <input value={profileForm.replyToEmail} onChange={(event) => setProfileForm((current) => ({ ...current, replyToEmail: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                      </label>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="block text-xs font-semibold text-zinc-500">
+                          发件人
+                          <input value={profileForm.senderName} onChange={(event) => setProfileForm((current) => ({ ...current, senderName: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                        </label>
+                        <label className="block text-xs font-semibold text-zinc-500">
+                          品牌
+                          <input value={profileForm.brandName} onChange={(event) => setProfileForm((current) => ({ ...current, brandName: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                        </label>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="block text-xs font-semibold text-zinc-500">
+                          发信方式
+                          <select value={profileForm.provider} onChange={(event) => setProfileForm((current) => ({ ...current, provider: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900">
+                            <option value="smtp">SMTP（邮箱账号）</option>
+                            <option value="resend">Resend（API）</option>
+                          </select>
+                        </label>
+                        <label className="block text-xs font-semibold text-zinc-500">
+                          每日上限
+                          <input type="number" min={1} max={1000} value={profileForm.dailySendLimit} onChange={(event) => setProfileForm((current) => ({ ...current, dailySendLimit: Number(event.target.value) }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                        </label>
+                      </div>
+                      {profileForm.provider === 'smtp' ? (
+                        <>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="block text-xs font-semibold text-zinc-500">
+                              SMTP 服务器地址
+                              <input value={profileForm.smtpHost} onChange={(event) => setProfileForm((current) => ({ ...current, smtpHost: event.target.value }))} placeholder="smtp.qq.com" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                            </label>
+                            <label className="block text-xs font-semibold text-zinc-500">
+                              端口
+                              <input type="number" min={1} max={65535} value={profileForm.smtpPort} onChange={(event) => setProfileForm((current) => ({ ...current, smtpPort: Number(event.target.value) }))} placeholder="465" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                            </label>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <label className="block text-xs font-semibold text-zinc-500">
+                              SMTP 用户名（邮箱）
+                              <input value={profileForm.smtpUser} onChange={(event) => setProfileForm((current) => ({ ...current, smtpUser: event.target.value }))} placeholder="you@example.com" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                            </label>
+                            <label className="block text-xs font-semibold text-zinc-500">
+                              授权码
+                              <input type="password" value={profileForm.smtpPassword} onChange={(event) => setProfileForm((current) => ({ ...current, smtpPassword: event.target.value }))} placeholder="邮箱授权码" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900" />
+                            </label>
+                          </div>
+                          <label className="flex items-center gap-2 text-xs text-zinc-600">
+                            <input type="checkbox" checked={profileForm.smtpSecure} onChange={(event) => setProfileForm((current) => ({ ...current, smtpSecure: event.target.checked }))} className="h-4 w-4 rounded border-zinc-300" />
+                            使用 SSL/TLS 安全连接（推荐开启，端口 465）
+                          </label>
+                        </>
+                      ) : (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                          Resend 需要在服务器环境变量中配置 <code className="rounded bg-amber-100 px-1">RESEND_API_KEY</code>。请在 <code>.env.local</code> 中添加。
+                        </div>
+                      )}
+                      <button type="button" onClick={() => setProfileForm((current) => ({ ...current, isEnabled: !current.isEnabled }))} className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold ${profileForm.isEnabled ? 'bg-emerald-600 text-white' : 'border border-zinc-300 bg-white text-zinc-700'}`}>
+                        <Power size={15} />
+                        {profileForm.isEnabled ? '启用中' : '已暂停'}
+                      </button>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button type="button" disabled={busy} onClick={saveProfile} className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                          保存
+                        </button>
+                        <button type="button" disabled={busy || testing || !profileForm.fromEmail} onClick={testProfile} className="inline-flex items-center justify-center gap-1.5 rounded-full border border-blue-300 bg-blue-50 px-5 py-2.5 text-sm font-semibold text-blue-700 disabled:opacity-50">
+                          <Send size={13} />
+                          {testing ? '测试中...' : '测试发送'}
+                        </button>
+                        <button type="button" disabled={busy} onClick={() => setExpandedProfileId(null)} className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 disabled:opacity-50">
+                          取消
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
         <section id="task-settings" className="mt-5 grid gap-5 xl:grid-cols-[1fr_420px]">
-          <div className="overflow-hidden rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
+          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm shadow-zinc-200/40">
             <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
               <div className="flex items-center gap-2">
                 <ClipboardList size={18} />
@@ -901,7 +1204,7 @@ export default function EmailTasksPage() {
             </div>
           </div>
 
-          <aside className="rounded-lg border border-zinc-200/60 bg-white/80 p-5 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
+          <aside className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-200/40">
             <div className="flex items-center gap-2">
               <Plus size={18} />
               <h2 className="text-lg font-semibold">新增任务</h2>
@@ -980,217 +1283,7 @@ export default function EmailTasksPage() {
           </aside>
         </section>
 
-        <section id="mailbox-settings" className="mt-5 grid gap-5 xl:grid-cols-[1fr_420px]">
-          <div className="rounded-lg border border-zinc-200/60 bg-white/80 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
-            <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
-              <div className="flex items-center gap-2">
-                <Settings size={18} />
-                <h2 className="text-lg font-semibold">邮箱设置</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  formInitialized.current = true;
-                  setProfileForm({
-                    id: '',
-                    label: '默认发件配置',
-                    provider: 'smtp',
-                    fromEmail: '',
-                    replyToEmail: '',
-                    senderName: '',
-                    brandName: '',
-                    dailySendLimit: 50,
-                    isEnabled: true,
-                    isDefault: false,
-                    notes: '',
-                    smtpHost: '',
-                    smtpPort: 465,
-                    smtpUser: '',
-                    smtpPassword: '',
-                    smtpSecure: true,
-                  });
-                }}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-700"
-              >
-                <Plus size={13} />
-                新建配置
-              </button>
-            </div>
-            <div>
-              <div className="grid grid-cols-12 gap-2 border-b border-zinc-100 bg-zinc-50 px-4 py-2.5 text-xs font-semibold text-zinc-500">
-                <div className="col-span-4">目前已设置邮箱</div>
-                <div className="col-span-2">发件人</div>
-                <div className="col-span-2 text-center">每日上限</div>
-                <div className="col-span-4 text-right">设置 / 启用 / 暂停 / 删除</div>
-              </div>
-              {data.profiles.length === 0 ? (
-                <div className="px-4 py-12 text-sm text-zinc-500">还没有邮箱配置。</div>
-              ) : data.profiles.map((profile) => (
-                <div key={profile.id} className="grid grid-cols-12 items-center gap-2 border-b border-zinc-100 px-4 py-3 text-sm last:border-b-0">
-                  <button type="button" onClick={() => setProfileForm({
-                    id: profile.id,
-                    label: profile.label || '默认发件配置',
-                    provider: profile.provider || 'smtp',
-                    fromEmail: profile.from_email || '',
-                    replyToEmail: profile.reply_to_email || '',
-                    senderName: profile.sender_name || '',
-                    brandName: profile.brand_name || '',
-                    dailySendLimit: profile.daily_send_limit || 50,
-                    isEnabled: profile.is_enabled !== false,
-                    isDefault: profile.is_default !== false,
-                    notes: profile.notes || '',
-                    smtpHost: profile.smtp_host || '',
-                    smtpPort: profile.smtp_port || 465,
-                    smtpUser: profile.smtp_user || '',
-                    smtpPassword: profile.smtp_password || '',
-                    smtpSecure: profile.smtp_secure !== false,
-                  })} className="col-span-4 truncate text-left font-semibold text-slate-900 hover:text-blue-600 transition-colors">
-                    {profile.from_email || profile.label}
-                  </button>
-                  <div className="col-span-2 truncate text-zinc-600">{profile.sender_name || profile.brand_name || '-'}</div>
-                  <div className="col-span-2 text-center">{profile.daily_send_limit}</div>
-                  <div className="col-span-4 flex justify-end gap-1.5">
-                    <button type="button" title="编辑配置" disabled={busy} onClick={() => setProfileForm({
-                      id: profile.id,
-                      label: profile.label || '默认发件配置',
-                      provider: profile.provider || 'smtp',
-                      fromEmail: profile.from_email || '',
-                      replyToEmail: profile.reply_to_email || '',
-                      senderName: profile.sender_name || '',
-                      brandName: profile.brand_name || '',
-                      dailySendLimit: profile.daily_send_limit || 50,
-                      isEnabled: profile.is_enabled !== false,
-                      isDefault: profile.is_default !== false,
-                      notes: profile.notes || '',
-                      smtpHost: profile.smtp_host || '',
-                      smtpPort: profile.smtp_port || 465,
-                      smtpUser: profile.smtp_user || '',
-                      smtpPassword: profile.smtp_password || '',
-                      smtpSecure: profile.smtp_secure !== false,
-                    })} className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 disabled:opacity-40">
-                      <Settings size={12} />
-                    </button>
-                    <button type="button" disabled={busy || profile.is_enabled} onClick={() => void toggleProfile(profile, true)} className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 disabled:opacity-40">
-                      启用
-                    </button>
-                    <button type="button" disabled={busy || !profile.is_enabled} onClick={() => void toggleProfile(profile, false)} className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700 disabled:opacity-40">
-                      暂停
-                    </button>
-                    <button type="button" disabled={busy} onClick={() => void deleteProfile(profile.id)} className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 disabled:opacity-40" title="删除邮箱配置">
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <aside className="rounded-lg border border-zinc-200/60 bg-white/80 p-5 shadow-sm shadow-zinc-200/40 backdrop-blur-sm">
-            <h2 className="text-lg font-semibold">配置邮箱参数</h2>
-            <div className="mt-4 space-y-3">
-              <label className="block text-xs font-semibold text-zinc-500">
-                配置名称
-                <input value={profileForm.label} onChange={(event) => setProfileForm((current) => ({ ...current, label: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-              </label>
-              <label className="block text-xs font-semibold text-zinc-500">
-                发信箱
-                <input value={profileForm.fromEmail} onChange={(event) => setProfileForm((current) => ({ ...current, fromEmail: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-              </label>
-              <label className="block text-xs font-semibold text-zinc-500">
-                回复邮箱
-                <input value={profileForm.replyToEmail} onChange={(event) => setProfileForm((current) => ({ ...current, replyToEmail: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-              </label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-xs font-semibold text-zinc-500">
-                  发件人
-                  <input value={profileForm.senderName} onChange={(event) => setProfileForm((current) => ({ ...current, senderName: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-                </label>
-                <label className="block text-xs font-semibold text-zinc-500">
-                  品牌
-                  <input value={profileForm.brandName} onChange={(event) => setProfileForm((current) => ({ ...current, brandName: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-                </label>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-xs font-semibold text-zinc-500">
-                  发信方式
-                  <select value={profileForm.provider} onChange={(event) => setProfileForm((current) => ({ ...current, provider: event.target.value }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm font-normal text-slate-900">
-                    <option value="smtp">SMTP（邮箱账号）</option>
-                    <option value="resend">Resend（API）</option>
-                  </select>
-                </label>
-                <label className="block text-xs font-semibold text-zinc-500">
-                  每日上限
-                  <input type="number" min={1} max={1000} value={profileForm.dailySendLimit} onChange={(event) => setProfileForm((current) => ({ ...current, dailySendLimit: Number(event.target.value) }))} className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-                </label>
-              </div>
-              {profileForm.provider === 'smtp' ? (
-                <>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="block text-xs font-semibold text-zinc-500">
-                      SMTP 服务器地址
-                      <input value={profileForm.smtpHost} onChange={(event) => setProfileForm((current) => ({ ...current, smtpHost: event.target.value }))} placeholder="smtp.qq.com" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-                    </label>
-                    <label className="block text-xs font-semibold text-zinc-500">
-                      端口
-                      <input type="number" min={1} max={65535} value={profileForm.smtpPort} onChange={(event) => setProfileForm((current) => ({ ...current, smtpPort: Number(event.target.value) }))} placeholder="465" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-                    </label>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="block text-xs font-semibold text-zinc-500">
-                      SMTP 用户名（邮箱）
-                      <input value={profileForm.smtpUser} onChange={(event) => setProfileForm((current) => ({ ...current, smtpUser: event.target.value }))} placeholder="you@example.com" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-                    </label>
-                    <label className="block text-xs font-semibold text-zinc-500">
-                      授权码
-                      <input type="password" value={profileForm.smtpPassword} onChange={(event) => setProfileForm((current) => ({ ...current, smtpPassword: event.target.value }))} placeholder="邮箱授权码" className="mt-1 h-10 w-full rounded-lg border border-zinc-200 px-3 text-sm font-normal text-slate-900" />
-                    </label>
-                  </div>
-                  <label className="flex items-center gap-2 text-xs text-zinc-600">
-                    <input type="checkbox" checked={profileForm.smtpSecure} onChange={(event) => setProfileForm((current) => ({ ...current, smtpSecure: event.target.checked }))} className="h-4 w-4 rounded border-zinc-300" />
-                    使用 SSL/TLS 安全连接（推荐开启，端口 465）
-                  </label>
-                </>
-              ) : (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                  Resend 需要在服务器环境变量中配置 <code className="rounded bg-amber-100 px-1">RESEND_API_KEY</code>。请在 <code>.env.local</code> 中添加。
-                </div>
-              )}
-              <button type="button" onClick={() => setProfileForm((current) => ({ ...current, isEnabled: !current.isEnabled }))} className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold ${profileForm.isEnabled ? 'bg-emerald-600 text-white' : 'border border-zinc-300 bg-white text-zinc-700'}`}>
-                <Power size={15} />
-                {profileForm.isEnabled ? '启用中' : '已暂停'}
-              </button>
-              <div className="grid grid-cols-3 gap-2">
-                <button type="button" disabled={busy} onClick={saveProfile} className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-                  保存
-                </button>
-                <button type="button" disabled={busy || testing || !profileForm.fromEmail} onClick={testProfile} className="inline-flex items-center justify-center gap-1.5 rounded-full border border-blue-300 bg-blue-50 px-5 py-2.5 text-sm font-semibold text-blue-700 disabled:opacity-50">
-                  <Send size={13} />
-                  {testing ? '测试中...' : '测试发送'}
-                </button>
-                <button type="button" disabled={busy} onClick={() => setProfileForm({
-                  id: '',
-                  label: '默认发件配置',
-                  provider: 'smtp',
-                  fromEmail: '',
-                  replyToEmail: '',
-                  senderName: '',
-                  brandName: '',
-                  dailySendLimit: 50,
-                  isEnabled: true,
-                  isDefault: true,
-                  notes: '',
-                  smtpHost: '',
-                  smtpPort: 465,
-                  smtpUser: '',
-                  smtpPassword: '',
-                  smtpSecure: true,
-                })} className="inline-flex items-center justify-center rounded-full border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 disabled:opacity-50">
-                  取消
-                </button>
-              </div>
-            </div>
-          </aside>
-        </section>
+        
       </div>
     </main>
   );

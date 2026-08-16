@@ -19,28 +19,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN" className="scroll-smooth">
-      <body
-        className="min-h-screen text-black antialiased selection:bg-blue-100 selection:text-blue-900"
-        style={{
-          backgroundImage: `url(/images/site-bg.webp)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-        }}
-      >
-        {/* 全局叠加细点十字底纹（让涂鸦背景之上再加一层细腻纹理） */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.18'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            mixBlendMode: 'overlay',
-          }}
-        />
+      <body className="min-h-screen bg-[#f5f5f7] text-black antialiased selection:bg-blue-100 selection:text-blue-900">
         <TrafficTracker />
 
         {/* --- 🍎 Apple 风格全局导航栏 --- */}
-        <header className="fixed top-0 w-full z-[100] bg-[#fbfbfd]/75 backdrop-blur-xl border-b border-white/40 transition-all duration-300">
+        <header className="fixed top-0 w-full z-[100] bg-[#fbfbfd]/80 backdrop-blur-md border-b border-gray-200 transition-all duration-300">
           <div className="max-w-[1024px] mx-auto px-4 h-11 flex items-center justify-between text-[12px] font-normal text-gray-700">
 
             {/* 1. Logo / Home */}
@@ -65,13 +48,13 @@ export default function RootLayout({
         </header>
 
         {/* --- 页面主体 --- */}
-        <main className="pt-11 min-h-screen relative z-10">
+        <main className="pt-11 min-h-screen">
           {children}
         </main>
 
         {/* --- 全局 Footer --- */}
-        <footer className="relative z-10 bg-white/70 backdrop-blur-xl py-16 text-[12px] text-gray-600" id="contact">
-          <div className="max-w-[1024px] mx-auto px-6 border-t border-white/40 pt-8">
+        <footer className="bg-[#f5f5f7] py-16 text-[12px] text-gray-500" id="contact">
+          <div className="max-w-[1024px] mx-auto px-6 border-t border-gray-200 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-start gap-8">
               
               {/* 左侧 */}
@@ -90,9 +73,9 @@ export default function RootLayout({
                   <button
                     type="button"
                     aria-label="WeChat QR"
-                    className="flex items-center gap-3 rounded-2xl border border-white/45 bg-white/35 px-4 py-3 text-left shadow-[0_16px_36px_-30px_rgba(15,23,42,0.55)] backdrop-blur-md transition hover:bg-white/45"
+                    className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-left shadow-sm transition hover:bg-gray-50"
                   >
-                    <div className="grid h-11 w-11 place-items-center rounded-xl border border-zinc-200/80 bg-white/80 text-[11px] font-semibold text-zinc-700 shadow-sm">
+                    <div className="grid h-11 w-11 place-items-center rounded-xl border border-gray-200 bg-white text-[11px] font-semibold text-zinc-700 shadow-sm">
                       微信
                     </div>
                     <div className="flex flex-col">
@@ -102,7 +85,7 @@ export default function RootLayout({
                   </button>
 
                   <div className="pointer-events-none absolute bottom-full right-0 mb-4 translate-y-2 opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                    <div className="pointer-events-auto overflow-hidden rounded-3xl border border-zinc-200/80 bg-white/90 shadow-[0_24px_50px_-36px_rgba(15,23,42,0.25)] backdrop-blur-xl">
+                    <div className="pointer-events-auto overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-lg">
                       <Image src="/images/Wechat.png" alt="WeChat QR" width={240} height={240} className="h-auto w-[240px]" />
                     </div>
                   </div>
